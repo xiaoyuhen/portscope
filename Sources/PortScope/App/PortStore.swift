@@ -51,6 +51,11 @@ final class PortStore: ObservableObject {
         didSet { restartTimer() }
     }
 
+    /// A stop/restart that is waiting for the user to confirm.
+    @Published var pendingAction: PendingAction?
+    /// The result of the last completed action, shown as a transient banner.
+    @Published private(set) var lastActionMessage: ActionMessage?
+
     /// Ports the user has chosen to ignore; persisted across launches.
     @Published private(set) var hiddenPorts: Set<Int> {
         didSet { UserDefaults.standard.set(Array(hiddenPorts), forKey: Self.hiddenKey) }
@@ -59,6 +64,7 @@ final class PortStore: ObservableObject {
     private static let hiddenKey = "PortScope.hiddenPorts"
     private static let activityLimit = 60
     private let scanner = PortScanner()
+    private let controller = ProcessController()
     private var timer: Timer?
     private var scanTask: Task<Void, Never>?
 
@@ -192,6 +198,81 @@ final class PortStore: ObservableObject {
         activity = (events + activity).prefix(Self.activityLimit).map { $0 }
     }
 
+    // MARK: - Actions
+
+    /// Asks for confirmation before anything is signalled. Even a dev server
+    /// can hold unsaved work; nothing here is undoable.
+    func requestStop(_ info: PortInfo) {
+        pendingAction = PendingAction(info: info, kind: .stop)
+    }
+
+    func requestRestart(_ info: PortInfo) {
+        pendingAction = PendingAction(info: info, kind: .restart)
+    }
+
+    func cancelPendingAction() {
+        pendingAction = nil
+    }
+
+    /// Runs the confirmed action.
+    func confirmPendingAction() async {
+        guard let action = pendingAction else { return }
+        pendingAction = nil
+        let info = action.info
+
+        switch action.kind {
+        case .stop:
+            let outcome = await controller.stop(pid: info.pid)
+            lastActionMessage = ActionMessage(
+                text: stopMessage(for: outcome, info: info),
+                isError: !outcome.success,
+                service: info
+            )
+        case .restart:
+            do {
+                _ = try await controller.restart(info: info)
+                lastActionMessage = ActionMessage(
+                    text: "action.restarted", isError: false, service: info
+                )
+            } catch {
+                lastActionMessage = ActionMessage(
+                    text: "action.restartFailed", isError: true, service: info,
+                    detail: "\(error)"
+                )
+            }
+        }
+
+        refreshAfterProcessChange()
+        dismissMessageLater()
+    }
+
+    private func stopMessage(for outcome: StopOutcome, info: PortInfo) -> String {
+        if outcome.success {
+            return outcome.forceKilled.isEmpty ? "action.stopped" : "action.forceStopped"
+        }
+        if let refusal = outcome.refused.values.first {
+            switch refusal {
+            case .otherUser: return "action.refusedOtherUser"
+            case .ownProcess: return "action.refusedOwnProcess"
+            case .systemProcess: return "action.refusedSystem"
+            case .processGone: return "action.processGone"
+            }
+        }
+        return "action.stopFailed"
+    }
+
+    private func dismissMessageLater() {
+        let message = lastActionMessage
+        Task { [weak self] in
+            try? await Task.sleep(for: .seconds(6))
+            await MainActor.run {
+                if self?.lastActionMessage?.id == message?.id {
+                    self?.lastActionMessage = nil
+                }
+            }
+        }
+    }
+
     // MARK: - Mutations
 
     func hide(port: Int) {
@@ -205,6 +286,24 @@ final class PortStore: ObservableObject {
     func unhideAll() {
         hiddenPorts.removeAll()
     }
+}
+
+/// A stop or restart waiting for confirmation.
+struct PendingAction: Identifiable, Sendable {
+    enum Kind: Sendable { case stop, restart }
+    let id = UUID()
+    let info: PortInfo
+    let kind: Kind
+}
+
+/// A transient banner after an action completes.
+struct ActionMessage: Identifiable, Sendable {
+    let id = UUID()
+    /// Localization key, or a literal message when `detail` is set.
+    let text: String
+    let isError: Bool
+    var service: PortInfo?
+    var detail: String?
 }
 
 /// One change to the machine: a port opened or closed.

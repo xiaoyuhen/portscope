@@ -200,3 +200,31 @@
 "overview.activity" = "Activity";
 "overview.events" = "%d changes";
 "overview.noActivity" = "No ports have opened or closed since PortScope started. Start a dev server and it will show up here.";
+
+/* MARK: - Actions */
+"ports.stop" = "Stop";
+"ports.restart" = "Restart";
+"inspector.stop" = "Stop";
+"inspector.restart" = "Restart";
+"confirm.stopTitle" = "Stop this service?";
+"confirm.stopSubtitle" = "The process and its child processes will be terminated.";
+"confirm.restartTitle" = "Restart this service?";
+"confirm.restartSubtitle" = "The process will be stopped, then started again with the same command line.";
+"confirm.service" = "Service";
+"confirm.port" = "Port";
+"confirm.pid" = "PID";
+"confirm.uptime" = "Uptime";
+"confirm.command" = "Command";
+"confirm.stop" = "Stop";
+"confirm.restart" = "Restart";
+"confirm.noWorkingDirectory" = "This process has no readable working directory. It will be restarted from your home directory.";
+"confirm.appWarning" = "This is a desktop or system process. Stopping it may close an app or disable a macOS feature.";
+"action.stopped" = "Stopped %@.";
+"action.forceStopped" = "Stopped %@. It did not exit cleanly, so it was force-killed.";
+"action.restarted" = "Restarted %@.";
+"action.restartFailed" = "Could not restart %@.";
+"action.stopFailed" = "Could not stop the process.";
+"action.refusedOtherUser" = "Not stopped: the process belongs to another user.";
+"action.refusedOwnProcess" = "Not stopped: PortScope will not signal itself.";
+"action.refusedSystem" = "Not stopped: this is a system process.";
+"action.processGone" = "The process had already exited.";

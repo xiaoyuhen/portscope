@@ -28,6 +28,11 @@ enum Theme {
         light: NSColor(white: 0.945, alpha: 1),
         dark: NSColor(white: 0.145, alpha: 1)
     )
+    /// Floating surfaces: toasts, popovers.
+    static let surfaceRaised = dynamic(
+        light: NSColor.white,
+        dark: NSColor(red: 0.145, green: 0.145, blue: 0.16, alpha: 1)
+    )
     /// Hover / selected row.
     static let rowHover = dynamic(
         light: NSColor(white: 0.965, alpha: 1),

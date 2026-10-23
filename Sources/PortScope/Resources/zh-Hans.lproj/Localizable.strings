@@ -200,3 +200,31 @@
 "overview.activity" = "变化记录";
 "overview.events" = "%d 次变化";
 "overview.noActivity" = "PortScope 启动以来还没有端口打开或关闭。启动一个开发服务器，它就会出现在这里。";
+
+/* MARK: - 操作 */
+"ports.stop" = "停止";
+"ports.restart" = "重启";
+"inspector.stop" = "停止";
+"inspector.restart" = "重启";
+"confirm.stopTitle" = "停止这个服务？";
+"confirm.stopSubtitle" = "该进程及其子进程都会被终止。";
+"confirm.restartTitle" = "重启这个服务？";
+"confirm.restartSubtitle" = "先停止该进程，再用相同的命令行重新启动。";
+"confirm.service" = "服务";
+"confirm.port" = "端口";
+"confirm.pid" = "PID";
+"confirm.uptime" = "已运行";
+"confirm.command" = "命令";
+"confirm.stop" = "停止";
+"confirm.restart" = "重启";
+"confirm.noWorkingDirectory" = "无法读取该进程的工作目录，将从你的用户目录重新启动。";
+"confirm.appWarning" = "这是一个桌面或系统进程。停止它可能会关闭某个应用或停用某项 macOS 功能。";
+"action.stopped" = "已停止 %@。";
+"action.forceStopped" = "已停止 %@。进程未能正常退出，已强制结束。";
+"action.restarted" = "已重启 %@。";
+"action.restartFailed" = "无法重启 %@。";
+"action.stopFailed" = "无法停止该进程。";
+"action.refusedOtherUser" = "未停止：该进程属于其他用户。";
+"action.refusedOwnProcess" = "未停止：PortScope 不会向自身发送信号。";
+"action.refusedSystem" = "未停止：这是系统进程。";
+"action.processGone" = "该进程已经退出。";
