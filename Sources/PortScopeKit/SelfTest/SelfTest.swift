@@ -20,10 +20,19 @@ public enum SelfTest {
     /// on failure. `async` bodies are awaited in order, so checks that spawn
     /// processes cannot interleave with each other.
     private static var checks: [(String, () async throws -> Void)] {
-        (LocalizationChecks.all + PortInfoChecks.all + ScannerChecks.all
-            + IdentifierChecks.all + ResourceChecks.all).map { name, body in
-            (name, { try body() })
-        } + ProcessControlChecks.all
+        // Built up in separate steps: one long concatenation of tuples times
+        // out the type checker on older Swift toolchains (CI caught this).
+        var all: [(String, () async throws -> Void)] = []
+        let synchronous = LocalizationChecks.all
+            + PortInfoChecks.all
+            + ScannerChecks.all
+            + IdentifierChecks.all
+            + ResourceChecks.all
+        for (name, body) in synchronous {
+            all.append((name, { try body() }))
+        }
+        all.append(contentsOf: ProcessControlChecks.all)
+        return all
     }
 
     @discardableResult
