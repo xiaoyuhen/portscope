@@ -135,23 +135,9 @@ final class PortStore: ObservableObject {
     }
 
     /// Whether a port belongs to something that runs in the background by
-    /// nature: a macOS service, or an app that is not a development tool.
-    ///
-    /// This is a judgement, not a fact, which is why the section is a
-    /// disclosure rather than a silent filter — nothing is ever truly hidden.
+    /// nature. The rule itself lives in the kit so it can be tested.
     static func isBackgroundService(_ info: PortInfo) -> Bool {
-        guard let service = info.service else { return false }
-        switch service.kind {
-        case .system:
-            return true
-        case .messaging:
-            // Slack, Discord, WeChat — desktop clients, not services you run.
-            return true
-        default:
-            // Anything launched from an app bundle that is not a developer
-            // tool is an app, not a service you started.
-            return info.appBundleName != nil
-        }
+        BackgroundClassification.isBackground(info)
     }
 
     var totalCount: Int { ports.count }

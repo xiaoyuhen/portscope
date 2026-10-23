@@ -116,3 +116,65 @@ enum ResourceChecks {
         }
     }
 }
+
+/// Checks for the foreground/background split the list uses to fold desktop
+/// and system ports away.
+///
+/// The rule is a judgement, so it is tested rather than trusted: folding the
+/// wrong row means a service someone started is invisible by default.
+enum BackgroundClassificationChecks {
+    static var all: [(String, () async throws -> Void)] {
+        [
+            ("a system service is folded", {
+                try expect(
+                    BackgroundClassification.isBackground(port(kind: .system, bundle: nil)),
+                    "system service should fold"
+                )
+            }),
+            ("a chat client is folded", {
+                try expect(
+                    BackgroundClassification.isBackground(port(kind: .messaging, bundle: "WeChat")),
+                    "chat client should fold"
+                )
+            }),
+            ("an app-bundle process is folded", {
+                try expect(
+                    BackgroundClassification.isBackground(port(kind: .web, bundle: "SomeApp")),
+                    "app bundle should fold"
+                )
+            }),
+            ("a dev server is never folded, even from an app bundle", {
+                try expect(
+                    !BackgroundClassification.isBackground(port(kind: .devServer, bundle: "SomeApp")),
+                    "dev server must stay visible"
+                )
+            }),
+            ("a database is never folded", {
+                try expect(
+                    !BackgroundClassification.isBackground(port(kind: .database, bundle: nil)),
+                    "database must stay visible"
+                )
+            }),
+            ("a plain Node process is never folded", {
+                try expect(
+                    !BackgroundClassification.isBackground(port(kind: .web, bundle: nil)),
+                    "node server must stay visible"
+                )
+            }),
+        ]
+    }
+
+    private static func port(kind: ServiceInfo.Kind, bundle: String?) -> PortInfo {
+        PortInfo(
+            port: 4000, addresses: ["127.0.0.1"], exposure: .loopback,
+            pid: 99, processName: "proc", executablePath: "/x",
+            arguments: [], workingDirectory: nil, uptime: 1,
+            appBundleName: bundle,
+            service: ServiceInfo(
+                kind: kind, title: "t", summaryKey: "s", confidence: 0.9,
+                evidence: [], httpStatus: nil, serverHeader: nil,
+                projectPath: nil, projectName: nil
+            )
+        )
+    }
+}
