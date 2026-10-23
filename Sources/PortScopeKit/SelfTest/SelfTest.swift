@@ -19,7 +19,7 @@ public enum SelfTest {
     /// Every check, in run order. Each entry is a name and a body that throws
     /// on failure.
     private static var checks: [(String, () throws -> Void)] {
-        LocalizationChecks.all + PortInfoChecks.all
+        LocalizationChecks.all + PortInfoChecks.all + ScannerChecks.all
     }
 
     @discardableResult

@@ -25,8 +25,13 @@ struct PortScopeApp: App {
 /// `PortScope --selftest` works from a terminal with no window server.
 enum HeadlessMode {
     static func handleIfNeeded() -> Bool {
-        guard CommandLine.arguments.contains("--selftest") else { return false }
-        exit(SelfTest.main())
+        if CommandLine.arguments.contains("--selftest") {
+            exit(SelfTest.main())
+        }
+        if ListCommand.handleIfNeeded() {
+            exit(0)
+        }
+        return false
     }
 }
 
