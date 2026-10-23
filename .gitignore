@@ -5,3 +5,6 @@ dist/
 *.xcworkspace
 .swiftpm/
 DerivedData/
+
+# Generated icon assets — rebuilt by scripts/make-icons.sh
+Support/Icon/build/

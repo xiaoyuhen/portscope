@@ -17,6 +17,9 @@ PortScope 一眼就能回答这些问题，并且会说明它凭什么这么判�
 
 - **实时列出所有监听端口。** 回环、局域网、通配绑定都包括；同一服务的 IPv4 与
   IPv6 套接字合并为一行。整机扫描约 100 毫秒，且不需要任何提权。
+- **默认安静。** 微信、Discord、ControlCenter、`rapportd` 这类桌面应用和系统服务
+  会长期占用端口，但它们几乎从来不是你打开端口监控的原因。这些会收拢成一行
+  ——"16 个桌面与系统端口"——点击才展开。搜索仍然能找到它们。
 - **说明它是什么**，而不只是哪个 PID —— 服务、框架、项目目录、HTTP 状态，以及
   每个结论的依据。不确定时会明说："Node.js，55%"，而不是给一个看似肯定的猜测。
 - **停止与重启。** 操作前确认，连同子进程一起处理，结束后验证结果。具体能碰什么、
@@ -134,6 +137,12 @@ PortScope 仅依赖 Apple Command Line Tools 即可构建。有几处 SDK 缺失
 | M6 | 兼容性矩阵、打包、文档 | ✅ |
 
 每个里程碑都以独立的 PR 合入，说明见 `docs/milestones/`。
+
+## 图标
+
+圆环代表端口，两组弧线从它向左右两侧发散。设计依据
+[freshtechbro/claudedesignskills](https://github.com/freshtechbro/claudedesignskills)
+中的 Bold Minimalism 原则。几何与设计说明见 [docs/logo.md](docs/logo.md)。
 
 ## 许可证
 

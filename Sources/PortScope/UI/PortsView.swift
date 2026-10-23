@@ -53,22 +53,81 @@ struct PortsView: View {
     private var rowList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(store.visiblePorts) { info in
-                    PortRow(
-                        info: info,
-                        isSelected: selection.value == info.port,
-                        isNew: store.recentlyAppeared.contains(info.port)
-                    )
-                    .contentShape(Rectangle())
-                    .onTapGesture { selection.value = info.port }
-                    .contextMenu {
-                        rowMenu(for: info)
+                // Foreground rows first. When the background section is open
+                // (or a search is active) `visiblePorts` already contains both
+                // sets, so the muted group is only drawn separately while it is
+                // folded — otherwise every background row would appear twice.
+                ForEach(store.foregroundPorts) { info in
+                    row(for: info, muted: false)
+                }
+                if isSearching {
+                    // Typing "wechat" must find WeChat whether or not the
+                    // section is open, so search shows matches from both sets.
+                    ForEach(store.backgroundPorts) { info in
+                        row(for: info, muted: true)
                     }
-                    Hairline(inset: 14)
+                } else if store.showBackgroundServices {
+                    ForEach(store.backgroundPorts) { info in
+                        row(for: info, muted: true)
+                    }
+                } else if !isSearching && store.backgroundCount > 0 {
+                    backgroundDisclosure
                 }
             }
         }
         .scrollContentBackground(.hidden)
+    }
+
+    private var isSearching: Bool {
+        !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private func row(for info: PortInfo, muted: Bool) -> some View {
+        VStack(spacing: 0) {
+            PortRow(
+                info: info,
+                isSelected: selection.value == info.port,
+                isNew: store.recentlyAppeared.contains(info.port),
+                isMuted: muted
+            )
+            .contentShape(Rectangle())
+            .onTapGesture { selection.value = info.port }
+            .contextMenu { rowMenu(for: info) }
+            Hairline(inset: 14)
+        }
+    }
+
+    /// One quiet row that opens or closes the background section.
+    ///
+    /// The count is the whole reason this exists: it tells you that six ports
+    /// are folded away without making you read six rows of WeChat and
+    /// ControlCenter to find out.
+    private var backgroundDisclosure: some View {
+        VStack(spacing: 0) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    store.showBackgroundServices = true
+                }
+            } label: {
+                HStack(spacing: 7) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 8, weight: .semibold))
+                        .foregroundStyle(Theme.textTertiary)
+                    Text(locale.t("ports.backgroundHidden", store.backgroundCount))
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.textSecondary)
+                    Spacer()
+                    Text(locale.t("ports.backgroundHint"))
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.textTertiary)
+                }
+                .padding(.horizontal, 14)
+                .frame(height: 32)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            Hairline(inset: 14)
+        }
     }
 
     @ViewBuilder
@@ -120,6 +179,16 @@ struct PortsView: View {
             Text(locale.t("ports.footer", store.visiblePorts.count, store.totalCount))
                 .font(.system(size: 11))
                 .foregroundStyle(Theme.textTertiary)
+            if store.showBackgroundServices && store.backgroundCount > 0 {
+                Button(locale.t("ports.backgroundCollapse")) {
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        store.showBackgroundServices = false
+                    }
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.accent)
+            }
             if store.hiddenCount > 0 {
                 Button(locale.t("ports.showHidden", store.hiddenCount)) {
                     store.unhideAll()
@@ -193,6 +262,9 @@ struct PortRow: View {
     let info: PortInfo
     let isSelected: Bool
     let isNew: Bool
+    /// Background rows are drawn at reduced contrast: present, but visibly not
+    /// what the page is about.
+    var isMuted: Bool = false
 
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
@@ -208,7 +280,7 @@ struct PortRow: View {
                 HStack(spacing: 6) {
                     Text(info.service?.title ?? info.processName)
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(Theme.textPrimary)
+                        .foregroundStyle(isMuted ? Theme.textSecondary : Theme.textPrimary)
                         .lineLimit(1)
 
                     if isNew {
@@ -272,7 +344,8 @@ struct PortRow: View {
             .font(.system(size: 13, weight: .medium))
             .foregroundStyle(tint)
             .frame(width: 30, height: 30)
-            .background(tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 7))
+            .background(tint.opacity(isMuted ? 0.07 : 0.12), in: RoundedRectangle(cornerRadius: 7))
+            .opacity(isMuted ? 0.75 : 1)
     }
 
     private var action: some View {

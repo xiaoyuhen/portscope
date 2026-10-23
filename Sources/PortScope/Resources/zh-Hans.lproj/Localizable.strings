@@ -233,3 +233,8 @@
 "menubar.tooltip" = "%d 个端口正在监听";
 "menubar.openApp" = "打开 PortScope";
 "menubar.quit" = "退出 PortScope";
+
+/* MARK: - 后台服务 */
+"ports.backgroundHidden" = "%d 个桌面与系统端口";
+"ports.backgroundHint" = "展开";
+"ports.backgroundCollapse" = "收起系统端口";
