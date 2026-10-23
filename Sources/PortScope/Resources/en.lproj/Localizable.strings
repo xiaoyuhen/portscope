@@ -1,0 +1,4 @@
+/* PortScope — English (base language) */
+
+"app.name" = "PortScope";
+"placeholder.subtitle" = "Watching your localhost ports.";

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    # macOS 14 runner: matches the app's minimum deployment target.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show toolchain
+        run: |
+          swift --version
+          sw_vers
+
+      - name: Build
+        run: swift build -c release
+
+      - name: Self-test
+        run: swift run -c release PortScope --selftest
+
+      - name: Assemble app bundle
+        run: ./scripts/build.sh --release
+
+      - name: Verify bundle
+        run: |
+          test -x dist/PortScope.app/Contents/MacOS/PortScope
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" dist/PortScope.app/Contents/Info.plist
+          codesign -dv dist/PortScope.app 2>&1 | head -5
