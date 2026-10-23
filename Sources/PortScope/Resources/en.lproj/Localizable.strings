@@ -228,3 +228,8 @@
 "action.refusedOwnProcess" = "Not stopped: PortScope will not signal itself.";
 "action.refusedSystem" = "Not stopped: this is a system process.";
 "action.processGone" = "The process had already exited.";
+
+/* MARK: - Menu bar */
+"menubar.tooltip" = "%d ports listening";
+"menubar.openApp" = "Open PortScope";
+"menubar.quit" = "Quit PortScope";
