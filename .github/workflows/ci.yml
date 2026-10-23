@@ -7,8 +7,10 @@ on:
 
 jobs:
   build-and-test:
-    # macOS 14 runner: matches the app's minimum deployment target.
-    runs-on: macos-14
+    # macos-15 is the oldest runner image with a Swift 6 toolchain. The app's
+    # own deployment target is macOS 14, which is set in Package.swift and does
+    # not depend on the runner image.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
