@@ -16,6 +16,9 @@ final class MenuBarController {
     /// do not present in this bundle configuration (same runtime limitation as
     /// SwiftUI `.sheet`), while a panel window does.
     private var panel: NSPanel?
+    /// Global mouse monitor and workspace observer used to dismiss the panel.
+    private var dismissMonitor: Any?
+    private var resignObserver: NSObjectProtocol?
     private let store: PortStore
     private let locale: AppLocale
     private let openWindow: () -> Void
@@ -30,11 +33,10 @@ final class MenuBarController {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = statusItem.button {
-            button.image = NSImage(
-                systemSymbolName: "dot.radiowaves.left.and.right",
-                accessibilityDescription: "PortScope"
-            )
-            button.image?.isTemplate = true
+            // The app's own mark, not an SF Symbol: the status item is the one
+            // place the product is always visible, so it should carry the mark.
+            // A template image lets macOS tint it for light and dark menu bars.
+            button.image = MenuBarController.statusIcon()
             button.imagePosition = .imageLeading
             button.target = self
             button.action = #selector(togglePopover(_:))
@@ -54,6 +56,26 @@ final class MenuBarController {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.updateLabel() }
             .store(in: &cancellables)
+    }
+
+    /// The menu bar mark, loaded from the bundle.
+    ///
+    /// Falls back to the SF Symbol the app used before if the resource is
+    /// missing, so a stripped-down build still shows something recognisable
+    /// rather than an empty menu bar slot.
+    static func statusIcon() -> NSImage? {
+        if let url = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png"),
+           let image = NSImage(contentsOf: url) {
+            image.isTemplate = true
+            image.size = NSSize(width: 18, height: 18)
+            return image
+        }
+        let fallback = NSImage(
+            systemSymbolName: "dot.radiowaves.left.and.right",
+            accessibilityDescription: "PortScope"
+        )
+        fallback?.isTemplate = true
+        return fallback
     }
 
     /// The count beside the icon. It is the whole point of a menu bar presence:
@@ -76,6 +98,7 @@ final class MenuBarController {
 
     private func showPanel() {
         guard let button = statusItem.button, let buttonWindow = button.window else { return }
+        installDismissHandlers()
         let size = NSSize(width: MenuBarPanel.width, height: MenuBarPanel.height)
         let panel = self.panel ?? makePanel(size: size)
         self.panel = panel
@@ -92,14 +115,46 @@ final class MenuBarController {
         panel.setFrame(NSRect(origin: origin, size: size), display: true)
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(panelResignedKey(_:)),
-            name: NSWindow.didResignKeyNotification, object: panel
-        )
+    }
+
+    /// Dismisses the panel when the user clicks anywhere outside it.
+    ///
+    /// `didResignKey` alone is not enough: the panel is non-activating, so it
+    /// never becomes key and that notification never fires — the panel stayed
+    /// open until the status item was clicked again. A global mouse monitor
+    /// catches clicks that land in other apps, and the workspace observer
+    /// catches app switches (⌘-Tab, clicking the Dock).
+    private func installDismissHandlers() {
+        removeDismissHandlers()
+        dismissMonitor = NSEvent.addGlobalMonitorForEvents(
+            matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+        ) { [weak self] _ in
+            // The monitor fires for clicks outside this app only; a click on
+            // the status item is handled by its own action.
+            self?.closePanel()
+        }
+        resignObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.closePanel()
+        }
+    }
+
+    private func removeDismissHandlers() {
+        if let dismissMonitor {
+            NSEvent.removeMonitor(dismissMonitor)
+            self.dismissMonitor = nil
+        }
+        if let resignObserver {
+            NotificationCenter.default.removeObserver(resignObserver)
+            self.resignObserver = nil
+        }
     }
 
     private func makePanel(size: NSSize) -> NSPanel {
-        let panel = NSPanel(
+        let panel = KeyablePanel(
             contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
@@ -133,12 +188,8 @@ final class MenuBarController {
     }
 
     private func closePanel() {
+        removeDismissHandlers()
         panel?.orderOut(nil)
-    }
-
-    /// Clicking anywhere else dismisses the panel, like a popover.
-    @objc private func panelResignedKey(_ notification: Notification) {
-        closePanel()
     }
 }
 
@@ -299,4 +350,14 @@ struct MenuBarRow: View {
             if let url = info.localURL { NSWorkspace.shared.open(url) }
         }
     }
+}
+
+/// A borderless panel that can take key focus without activating the app.
+///
+/// `NSPanel` with `.nonactivatingPanel` refuses key status by default, which
+/// left the search-free panel unable to dismiss itself and made clicks inside
+/// it feel unresponsive. Accepting key focus is what a menu bar popover does.
+final class KeyablePanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { false }
 }

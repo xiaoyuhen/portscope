@@ -43,6 +43,20 @@ final class PortStore: ObservableObject {
     @Published var filter: Filter = .all
     @Published var searchText = ""
 
+    /// Whether desktop apps and macOS system services are listed.
+    ///
+    /// WeChat, Discord, ControlCenter and `rapportd` hold ports all day. They
+    /// are real, but they are never what someone opens a port monitor to look
+    /// at, so they are folded away behind a disclosure by default. The choice
+    /// is remembered: someone who hides them once should not see them again on
+    /// the next launch.
+    @Published var showBackgroundServices: Bool {
+        didSet {
+            guard showBackgroundServices != oldValue else { return }
+            UserDefaults.standard.set(showBackgroundServices, forKey: Self.backgroundKey)
+        }
+    }
+
     /// Refresh interval in seconds. Changing it restarts the timer and is
     /// remembered across launches — a preference that resets every time is
     /// worse than no preference.
@@ -66,6 +80,7 @@ final class PortStore: ObservableObject {
 
     private static let hiddenKey = "PortScope.hiddenPorts"
     private static let refreshKey = "PortScope.refreshInterval"
+    private static let backgroundKey = "PortScope.showBackgroundServices"
     private static let activityLimit = 60
     private let scanner = PortScanner()
     private let controller = ProcessController()
@@ -79,12 +94,36 @@ final class PortStore: ObservableObject {
         self.refreshInterval = refreshInterval ?? (storedInterval > 0 ? storedInterval : 2)
         let storedHidden = UserDefaults.standard.array(forKey: Self.hiddenKey) as? [Int] ?? []
         hiddenPorts = Set(storedHidden)
+        showBackgroundServices = UserDefaults.standard.bool(forKey: Self.backgroundKey)
         start()
     }
 
     // MARK: - Derived state
 
+    /// Ports the user is likely to care about: everything except desktop apps
+    /// and system services.
+    var foregroundPorts: [PortInfo] {
+        matchingPorts.filter { !Self.isBackgroundService($0) }
+    }
+
+    /// Desktop apps and macOS services holding ports.
+    var backgroundPorts: [PortInfo] {
+        matchingPorts.filter { Self.isBackgroundService($0) }
+    }
+
+    /// Rows the list actually shows: the foreground set, plus the background
+    /// set when it has been expanded (or when a search matches one of them —
+    /// typing "wechat" should find WeChat whether or not the section is open).
     var visiblePorts: [PortInfo] {
+        let searching = !searchText.trimmingCharacters(in: .whitespaces).isEmpty
+        if showBackgroundServices || searching {
+            return matchingPorts
+        }
+        return foregroundPorts
+    }
+
+    /// Everything that survives the filter, the hidden list and the search.
+    private var matchingPorts: [PortInfo] {
         let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
         return ports.filter { info in
             guard !hiddenPorts.contains(info.port), filter.matches(info) else { return false }
@@ -95,7 +134,29 @@ final class PortStore: ObservableObject {
         }
     }
 
+    /// Whether a port belongs to something that runs in the background by
+    /// nature: a macOS service, or an app that is not a development tool.
+    ///
+    /// This is a judgement, not a fact, which is why the section is a
+    /// disclosure rather than a silent filter — nothing is ever truly hidden.
+    static func isBackgroundService(_ info: PortInfo) -> Bool {
+        guard let service = info.service else { return false }
+        switch service.kind {
+        case .system:
+            return true
+        case .messaging:
+            // Slack, Discord, WeChat — desktop clients, not services you run.
+            return true
+        default:
+            // Anything launched from an app bundle that is not a developer
+            // tool is an app, not a service you started.
+            return info.appBundleName != nil
+        }
+    }
+
     var totalCount: Int { ports.count }
+    var backgroundCount: Int { backgroundPorts.count }
+    var foregroundCount: Int { foregroundPorts.count }
     var hiddenCount: Int { ports.filter { hiddenPorts.contains($0.port) }.count }
     var exposedCount: Int { ports.filter(\.exposure.isPubliclyReachable).count }
     /// Development-facing ports: dev servers, bundlers, and the generic web /
@@ -114,7 +175,12 @@ final class PortStore: ObservableObject {
 
     /// Counts per filter, shown next to each filter's name.
     func count(for filter: Filter) -> Int {
-        ports.filter { !hiddenPorts.contains($0.port) && filter.matches($0) }.count
+        ports.filter { info in
+            guard !hiddenPorts.contains(info.port), filter.matches(info) else { return false }
+            // The chip counts what expanding it would show, so it agrees with
+            // the list rather than with the raw scan.
+            return showBackgroundServices || !Self.isBackgroundService(info)
+        }.count
     }
 
     // MARK: - Scanning

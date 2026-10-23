@@ -35,9 +35,16 @@ for lproj in "$ROOT"/Sources/PortScope/Resources/*.lproj; do
     [[ -d "$lproj" ]] && cp -R "$lproj" "$APP/Contents/Resources/"
 done
 
-if [[ -f "$ROOT/Support/AppIcon.icns" ]]; then
-    cp "$ROOT/Support/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+# Icons are generated from Support/Icon/*.svg by scripts/make-icons.sh. The
+# build regenerates them only when missing, so a normal build stays fast.
+ICON_BUILD="$ROOT/Support/Icon/build"
+if [[ ! -f "$ICON_BUILD/AppIcon.icns" ]]; then
+    echo "==> Generating icons"
+    "$ROOT/scripts/make-icons.sh" >/dev/null
 fi
+cp "$ICON_BUILD/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ICON_BUILD/MenuBarIcon.png" "$APP/Contents/Resources/MenuBarIcon.png"
+cp "$ICON_BUILD/MenuBarIcon@2x.png" "$APP/Contents/Resources/MenuBarIcon@2x.png"
 
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" \
     "$ROOT/Support/Info.plist" > "$APP/Contents/Info.plist"

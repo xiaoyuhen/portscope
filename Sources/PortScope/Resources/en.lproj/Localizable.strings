@@ -233,3 +233,8 @@
 "menubar.tooltip" = "%d ports listening";
 "menubar.openApp" = "Open PortScope";
 "menubar.quit" = "Quit PortScope";
+
+/* MARK: - Background services */
+"ports.backgroundHidden" = "%d desktop and system ports";
+"ports.backgroundHint" = "show";
+"ports.backgroundCollapse" = "Fold system ports";

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<!--
+  PortScope app mark.
+
+  Brief, from the modern-web-design skill's "Bold Minimalism" guidance:
+  geometric shapes and clean lines, a 2-4 colour palette, high contrast, no
+  decorative gradients, nothing literal inside the mark.
+
+  The idea: a port is a hole a signal comes out of. A white ring is the port;
+  two pairs of arcs radiate from it left and right. The bilateral symmetry is
+  deliberate — a one-sided fan read as an accident and left the group optically
+  off-centre. Symmetric emission also scales: at 18 px the arcs still resolve
+  as a signal, which a one-sided fan does not.
+
+  Geometry on a 1024 grid, centre (512, 512):
+    ring   r 140, stroke 76
+    inner  arcs r 250, stroke 58, 116 deg span, centred on 0 and 180 deg
+    outer  arcs r 350, stroke 46, 100 deg span, same axes
+  The outer pair is thinner and slightly darker, so the fan reads as receding
+  without a gradient.
+
+  The menu bar uses a monochrome version drawn by scripts/make-icons.sh, not
+  this file: a template image must be black on transparent, which SVG
+  rasterisation through WKWebView cannot produce reliably.
+-->
+<rect width="1024" height="1024" rx="228" fill="#111216"/>
+<circle cx="512" cy="512" r="140" fill="none" stroke="#F2F3F7" stroke-width="76"/>
+<path d="M 644.5 300.0 A 250 250 0 0 1 644.5 724.0" fill="none" stroke="#8FA8FF" stroke-width="58" stroke-linecap="round"/>
+<path d="M 379.5 724.0 A 250 250 0 0 1 379.5 300.0" fill="none" stroke="#8FA8FF" stroke-width="58" stroke-linecap="round"/>
+<path d="M 737.0 243.9 A 350 350 0 0 1 737.0 780.1" fill="none" stroke="#6B7FEF" stroke-width="46" stroke-linecap="round"/>
+<path d="M 287.0 780.1 A 350 350 0 0 1 287.0 243.9" fill="none" stroke="#6B7FEF" stroke-width="46" stroke-linecap="round"/>
+</svg>
