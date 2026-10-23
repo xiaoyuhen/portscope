@@ -9,12 +9,12 @@ struct PortScopeApp: App {
 
     var body: some Scene {
         WindowGroup(LocalizationSupport.string("app.name", language: locale.language, bundle: .module)) {
-            PlaceholderView()
+            RootView()
                 .environmentObject(locale)
-                .frame(minWidth: 900, minHeight: 560)
+                .frame(minWidth: 860, minHeight: 520)
         }
         .windowStyle(.hiddenTitleBar)
-        .defaultSize(width: 1040, height: 720)
+        .defaultSize(width: 1120, height: 720)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }
@@ -38,23 +38,12 @@ enum HeadlessMode {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillFinishLaunching(_ notification: Notification) {
         _ = HeadlessMode.handleIfNeeded()
+        // The window is fully custom; the standard title bar would only add a
+        // strip of chrome above the app's own top bar.
+        NSWindow.allowsAutomaticWindowTabbing = false
     }
-}
 
-/// Temporary shell for M0. Replaced by the real dashboard in M3.
-private struct PlaceholderView: View {
-    @EnvironmentObject private var locale: AppLocale
-
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "dot.radiowaves.left.and.right")
-                .font(.system(size: 42, weight: .light))
-            Text(locale.t("app.name"))
-                .font(.system(size: 22, weight: .semibold))
-            Text(locale.t("placeholder.subtitle"))
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.canvas)
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        true
     }
 }
