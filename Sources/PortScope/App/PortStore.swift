@@ -43,9 +43,15 @@ final class PortStore: ObservableObject {
     @Published var filter: Filter = .all
     @Published var searchText = ""
 
-    /// Refresh interval in seconds. Changing it restarts the timer.
+    /// Refresh interval in seconds. Changing it restarts the timer and is
+    /// remembered across launches — a preference that resets every time is
+    /// worse than no preference.
     @Published var refreshInterval: TimeInterval {
-        didSet { restartTimer() }
+        didSet {
+            guard refreshInterval != oldValue else { return }
+            UserDefaults.standard.set(refreshInterval, forKey: Self.refreshKey)
+            restartTimer()
+        }
     }
 
     /// A stop/restart that is waiting for the user to confirm.
@@ -59,16 +65,20 @@ final class PortStore: ObservableObject {
     }
 
     private static let hiddenKey = "PortScope.hiddenPorts"
+    private static let refreshKey = "PortScope.refreshInterval"
     private static let activityLimit = 60
     private let scanner = PortScanner()
     private let controller = ProcessController()
     private var timer: Timer?
     private var scanTask: Task<Void, Never>?
 
-    init(refreshInterval: TimeInterval = 2) {
-        self.refreshInterval = refreshInterval
-        let stored = UserDefaults.standard.array(forKey: Self.hiddenKey) as? [Int] ?? []
-        hiddenPorts = Set(stored)
+    init(refreshInterval: TimeInterval? = nil) {
+        // `didSet` does not fire during init, so the stored value is read
+        // explicitly rather than relied on to be applied by the property.
+        let storedInterval = UserDefaults.standard.double(forKey: Self.refreshKey)
+        self.refreshInterval = refreshInterval ?? (storedInterval > 0 ? storedInterval : 2)
+        let storedHidden = UserDefaults.standard.array(forKey: Self.hiddenKey) as? [Int] ?? []
+        hiddenPorts = Set(storedHidden)
         start()
     }
 
