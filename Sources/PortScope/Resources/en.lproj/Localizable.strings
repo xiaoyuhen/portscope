@@ -106,3 +106,97 @@
 "service.port8000" = "A dev server on the conventional Python port. PortScope could not identify the framework.";
 "service.port8080" = "A web server on the conventional alternate HTTP port.";
 "service.kafka" = "Apache Kafka. A distributed event streaming platform.";
+
+/* MARK: - Top bar and pages */
+"topbar.live" = "Live";
+"topbar.scanning" = "Scanning";
+"topbar.refresh" = "Refresh now";
+"topbar.settings" = "Settings";
+"page.ports" = "Ports";
+"page.overview" = "Overview";
+"page.settings" = "Settings";
+
+/* MARK: - Exposure */
+"exposure.loopback" = "Local only";
+"exposure.interface" = "On a network interface";
+"exposure.allInterfaces" = "On all interfaces";
+"exposure.help" = "Reachable from other devices on your network.";
+
+/* MARK: - Filters */
+"filter.all" = "All";
+"filter.development" = "Dev";
+"filter.databases" = "Data";
+"filter.exposed" = "Exposed";
+"filter.system" = "System";
+
+/* MARK: - Ports list */
+"ports.search" = "Search ports…";
+"ports.empty" = "No listening ports right now.";
+"ports.noMatches" = "Nothing matches that search.";
+"ports.clearSearch" = "Clear search";
+"ports.footer" = "%d of %d ports";
+"ports.showHidden" = "Show %d hidden";
+"ports.updated" = "updated %@";
+"ports.new" = "NEW";
+"ports.openInBrowser" = "Open in Browser";
+"ports.copyAddress" = "Copy Address";
+"ports.hide" = "Hide This Port";
+"ports.revealInFinder" = "Reveal Working Directory";
+
+/* MARK: - Inspector */
+"inspector.open" = "Open";
+"inspector.whatItIs" = "What this is";
+"inspector.evidence" = "Why PortScope thinks so";
+"inspector.confidence" = "%d%% confident";
+"inspector.noEvidence" = "No evidence gathered yet.";
+"inspector.process" = "Process";
+"inspector.pid" = "PID";
+"inspector.executable" = "Executable";
+"inspector.httpStatus" = "HTTP status";
+"inspector.server" = "Server header";
+"inspector.commandLine" = "Command line";
+"inspector.project" = "Project";
+"inspector.reveal" = "Reveal";
+"inspector.uptime" = "up %@";
+
+/* MARK: - Service kinds */
+"kind.web" = "Web";
+"kind.api" = "API";
+"kind.database" = "Database";
+"kind.cache" = "Cache";
+"kind.devServer" = "Dev server";
+"kind.bundler" = "Bundler";
+"kind.container" = "Container";
+"kind.ai" = "AI";
+"kind.messaging" = "Messaging";
+"kind.system" = "System";
+"kind.other" = "Other";
+
+/* MARK: - Overview */
+"overview.listening" = "Listening";
+"overview.devServers" = "Dev servers";
+"overview.dataStores" = "Data stores";
+"overview.networkReachable" = "Network reachable";
+"overview.byKind" = "By kind";
+"overview.exposure" = "Exposure";
+"overview.exposureHint" = "Ports bound to a network interface, not just loopback.";
+"overview.nothingExposed" = "Nothing is reachable from the network.";
+"overview.andMore" = "+%d more";
+"overview.justAppeared" = "Just appeared";
+
+/* MARK: - Settings */
+"settings.refreshTitle" = "Refresh interval";
+"settings.refreshSubtitle" = "How often PortScope rescans the machine.";
+"settings.seconds" = "%ds";
+"settings.languageTitle" = "Language";
+"settings.languageSubtitle" = "Applies immediately, no relaunch needed.";
+"settings.hiddenTitle" = "Hidden ports";
+"settings.hiddenSubtitle" = "Ports you hid from the list. They are still monitored.";
+"settings.unhideAll" = "Show all";
+"settings.about" = "About";
+"settings.aboutBody" = "PortScope reads listening sockets through libproc, the same kernel interface as lsof, and identifies services from process metadata and HTTP headers. Everything stays on this machine.";
+
+/* MARK: - Activity */
+"overview.activity" = "Activity";
+"overview.events" = "%d changes";
+"overview.noActivity" = "No ports have opened or closed since PortScope started. Start a dev server and it will show up here.";

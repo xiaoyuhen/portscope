@@ -106,3 +106,97 @@
 "service.port8000" = "Python 常用端口上的开发服务器。PortScope 无法判断具体框架。";
 "service.port8080" = "备用 HTTP 常用端口上的 Web 服务器。";
 "service.kafka" = "Apache Kafka。分布式事件流平台。";
+
+/* MARK: - 顶栏与页面 */
+"topbar.live" = "实时";
+"topbar.scanning" = "扫描中";
+"topbar.refresh" = "立即刷新";
+"topbar.settings" = "设置";
+"page.ports" = "端口";
+"page.overview" = "概览";
+"page.settings" = "设置";
+
+/* MARK: - 暴露范围 */
+"exposure.loopback" = "仅本机";
+"exposure.interface" = "绑定网卡";
+"exposure.allInterfaces" = "所有网卡";
+"exposure.help" = "局域网内其他设备可以访问此端口。";
+
+/* MARK: - 筛选 */
+"filter.all" = "全部";
+"filter.development" = "开发";
+"filter.databases" = "数据";
+"filter.exposed" = "对外";
+"filter.system" = "系统";
+
+/* MARK: - 端口列表 */
+"ports.search" = "搜索端口…";
+"ports.empty" = "当前没有正在监听的端口。";
+"ports.noMatches" = "没有匹配的结果。";
+"ports.clearSearch" = "清除搜索";
+"ports.footer" = "%d / %d 个端口";
+"ports.showHidden" = "显示 %d 个已隐藏";
+"ports.updated" = "更新于 %@";
+"ports.new" = "新";
+"ports.openInBrowser" = "在浏览器中打开";
+"ports.copyAddress" = "复制地址";
+"ports.hide" = "隐藏此端口";
+"ports.revealInFinder" = "在访达中显示工作目录";
+
+/* MARK: - 详情 */
+"inspector.open" = "打开";
+"inspector.whatItIs" = "这是什么";
+"inspector.evidence" = "判断依据";
+"inspector.confidence" = "置信度 %d%%";
+"inspector.noEvidence" = "暂无判断依据。";
+"inspector.process" = "进程";
+"inspector.pid" = "PID";
+"inspector.executable" = "可执行文件";
+"inspector.httpStatus" = "HTTP 状态";
+"inspector.server" = "Server 响应头";
+"inspector.commandLine" = "命令行";
+"inspector.project" = "项目";
+"inspector.reveal" = "显示";
+"inspector.uptime" = "已运行 %@";
+
+/* MARK: - 服务类型 */
+"kind.web" = "Web";
+"kind.api" = "API";
+"kind.database" = "数据库";
+"kind.cache" = "缓存";
+"kind.devServer" = "开发服务器";
+"kind.bundler" = "打包工具";
+"kind.container" = "容器";
+"kind.ai" = "AI";
+"kind.messaging" = "消息";
+"kind.system" = "系统";
+"kind.other" = "其他";
+
+/* MARK: - 概览 */
+"overview.listening" = "监听中";
+"overview.devServers" = "开发服务器";
+"overview.dataStores" = "数据存储";
+"overview.networkReachable" = "对外可达";
+"overview.byKind" = "按类型";
+"overview.exposure" = "暴露情况";
+"overview.exposureHint" = "绑定在网卡上、而不只是回环地址的端口。";
+"overview.nothingExposed" = "没有端口可从局域网访问。";
+"overview.andMore" = "另有 %d 个";
+"overview.justAppeared" = "刚刚出现";
+
+/* MARK: - 设置 */
+"settings.refreshTitle" = "刷新间隔";
+"settings.refreshSubtitle" = "PortScope 多久重新扫描一次本机。";
+"settings.seconds" = "%d 秒";
+"settings.languageTitle" = "语言";
+"settings.languageSubtitle" = "立即生效，无需重启。";
+"settings.hiddenTitle" = "已隐藏的端口";
+"settings.hiddenSubtitle" = "这些端口已从列表中隐藏，但仍会被监控。";
+"settings.unhideAll" = "全部显示";
+"settings.about" = "关于";
+"settings.aboutBody" = "PortScope 通过 libproc（与 lsof 相同的内核接口）读取监听中的套接字，并依据进程信息和 HTTP 响应头识别服务。所有数据都只留在本机。";
+
+/* MARK: - 活动记录 */
+"overview.activity" = "变化记录";
+"overview.events" = "%d 次变化";
+"overview.noActivity" = "PortScope 启动以来还没有端口打开或关闭。启动一个开发服务器，它就会出现在这里。";
