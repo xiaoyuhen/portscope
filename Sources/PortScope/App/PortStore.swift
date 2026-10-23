@@ -36,9 +36,6 @@ final class PortStore: ObservableObject {
     @Published private(set) var isScanning = false
     /// Ports that appeared since the previous scan, for the "new" badge.
     @Published private(set) var recentlyAppeared: Set<Int> = []
-    /// Non-nil when scanning failed in a way worth telling the user about.
-    @Published private(set) var scanError: String?
-
     /// Ports that opened or closed while the app was running. Newest first.
     /// Capped so a long session cannot grow it without bound.
     @Published private(set) var activity: [PortEvent] = []
@@ -158,7 +155,6 @@ final class PortStore: ObservableObject {
         let previous = Dictionary(uniqueKeysWithValues: ports.map { ($0.port, $0) })
         ports = snapshot.ports
         lastScan = snapshot.capturedAt
-        scanError = nil
         recordActivity(snapshot, previous: previous)
         recentlyAppeared = snapshot.newPorts
         // The "new" badge is a moment, not a state: clear it after a few
@@ -277,10 +273,6 @@ final class PortStore: ObservableObject {
 
     func hide(port: Int) {
         hiddenPorts.insert(port)
-    }
-
-    func unhide(port: Int) {
-        hiddenPorts.remove(port)
     }
 
     func unhideAll() {
