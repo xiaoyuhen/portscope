@@ -55,13 +55,15 @@ enum ListCommand {
             print("No listening TCP ports.")
             return
         }
-        let header = ["PORT", "BIND", "PID", "PROCESS", "CWD"]
+        let header = ["PORT", "BIND", "PID", "PROCESS", "SERVICE", "PROJECT", "CWD"]
         var rows: [[String]] = ports.map { info in
             [
                 String(info.port),
                 info.addresses.joined(separator: ","),
                 String(info.pid),
                 info.displayName,
+                info.service.map { "\($0.title) (\(Int($0.confidence * 100))%)" } ?? "-",
+                info.service?.projectName ?? "-",
                 info.workingDirectory ?? "-",
             ]
         }

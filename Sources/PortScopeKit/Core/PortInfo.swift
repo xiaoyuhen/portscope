@@ -64,10 +64,18 @@ public struct ServiceInfo: Codable, Sendable, Hashable {
     }
 
     public var kind: Kind
-    /// Short label, e.g. "Express API", "Redis", "Vite dev server".
+    /// Short product label, e.g. "Express", "Redis", "Vite". A proper noun, so
+    /// it is not translated.
     public var title: String
-    /// One sentence a person can act on: what this thing is for.
-    public var summary: String
+    /// Localization key for the one-sentence explanation of what this is.
+    /// Sentences are assembled in the UI layer so they read naturally in both
+    /// languages; storing English prose here would leak it into the Chinese UI.
+    public var summaryKey: String
+
+    /// How sure we are about `title`. Taken from the strongest match, with a
+    /// small boost when an independent tier agrees — but never presented as
+    /// certainty, because every signal here is inference.
+    public var confidence: Double
     /// Where the judgement came from, so the UI can show confidence honestly.
     public var evidence: [Evidence]
     /// HTTP status we got when probing, if we probed.
@@ -76,15 +84,12 @@ public struct ServiceInfo: Codable, Sendable, Hashable {
     /// The project directory this service belongs to, when we can tell.
     public var projectPath: String?
     public var projectName: String?
-
-    public var confidence: Double {
-        let weights = evidence.map(\.weight)
-        return min(1.0, weights.reduce(0, +))
-    }
 }
 
 public struct Evidence: Codable, Sendable, Hashable {
-    public var source: String
+    /// Localization key for the kind of evidence, e.g. "evidence.serverHeader".
+    public var sourceKey: String
+    /// The raw observed value, shown verbatim: a header value, a path, a name.
     public var detail: String
     public var weight: Double
 }

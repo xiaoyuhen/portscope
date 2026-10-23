@@ -2,3 +2,107 @@
 
 "app.name" = "PortScope";
 "placeholder.subtitle" = "正在监视本机端口。";
+
+/* MARK: - 通用 */
+"common.close" = "关闭";
+"common.cancel" = "取消";
+"common.confirm" = "确认";
+"common.copy" = "复制";
+"common.copied" = "已复制";
+"common.open" = "打开";
+"common.refresh" = "刷新";
+"common.unknown" = "未知";
+"common.none" = "无";
+
+/* MARK: - 识别依据 */
+"evidence.process" = "进程";
+"evidence.httpHeader" = "HTTP 响应头";
+"evidence.httpStatus" = "HTTP 响应";
+"evidence.nonHTTP" = "非 HTTP";
+"evidence.wellKnownPort" = "常见端口";
+"evidence.process.detail" = "命令行";
+"evidence.nonHTTP.detail" = "该端口接受了连接，但没有返回 HTTP 响应。";
+
+/* MARK: - 服务说明 */
+"service.unknown" = "PortScope 没能识别出这是什么服务。下方仍会显示进程和命令行，供你判断。";
+"service.genericHTTP" = "一个没有自我标识的 HTTP 服务。打开看看它提供什么内容。";
+"service.genericAPI" = "一个返回 JSON 的 HTTP 接口，很可能是 API。查看它的响应即可确认。";
+
+"service.vite" = "Vite 开发服务器。开发时提供前端页面，支持热更新。";
+"service.next" = "Next.js。开发模式下带热更新提供页面；生产模式下提供构建好的应用。";
+"service.nuxt" = "Nuxt 开发服务器，用于 Vue 应用，支持热更新。";
+"service.webpack" = "webpack dev server。打包前端资源并带实时刷新提供页面。";
+"service.nodemon" = "nodemon 包装进程。文件变化时自动重启 Node 进程。";
+"service.cra" = "Create React App 开发服务器，提供 React 应用并支持热更新。";
+"service.angular" = "Angular CLI 开发服务器，支持实时刷新。";
+"service.vuecli" = "Vue CLI 开发服务器，支持热更新。";
+"service.remix" = "Remix 开发服务器。带热更新和服务端渲染提供路由页面。";
+"service.astro" = "Astro 开发服务器。开发时带热更新提供站点。";
+"service.sveltekit" = "SvelteKit 开发服务器，支持热更新。";
+"service.storybook" = "Storybook。一个在浏览器里单独浏览和测试 UI 组件的工具。";
+"service.staticServer" = "静态文件服务器。把它所在目录里的文件通过 HTTP 提供出去。";
+
+"service.django" = "Django 开发服务器。运行 Python Web 应用，仅用于开发，不要用于生产。";
+"service.pythonServer" = "Python 的 ASGI/WSGI 服务器（Uvicorn 或 Gunicorn），承载一个 Web 应用。";
+"service.flask" = "Flask 开发服务器，运行 Python Web 应用。";
+"service.pythonHTTPServer" = "Python 自带的 http.server。把当前目录当作静态文件提供出去。";
+"service.jupyter" = "Jupyter。浏览器里的 Notebook 环境，每个 Notebook 对应一个内核。";
+"service.streamlit" = "Streamlit。把 Python 脚本变成可交互的数据应用。";
+"service.gradio" = "Gradio。为机器学习模型或函数提供网页界面。";
+
+"service.redis" = "Redis。内存键值存储，常用于缓存、队列和限流。";
+"service.valkey" = "Valkey，Redis 的开源分支。内存键值存储。";
+"service.memcached" = "Memcached。内存缓存，通常放在数据库前面。";
+"service.postgres" = "PostgreSQL。关系型数据库。";
+"service.mysql" = "MySQL。关系型数据库。";
+"service.mongodb" = "MongoDB。文档型数据库。";
+"service.clickhouse" = "ClickHouse。用于分析的列式数据库。";
+"service.influxdb" = "InfluxDB。时序数据库。";
+"service.elasticsearch" = "Elasticsearch。搜索与分析引擎。";
+"service.qdrant" = "Qdrant。向量数据库，通常用于向量化和语义检索。";
+"service.ollama" = "Ollama。在本机运行大模型，并通过 HTTP API 对外提供。";
+
+"service.rabbitmq" = "RabbitMQ。消息队列，用于服务之间传递任务。";
+"service.nats" = "NATS。轻量级消息系统。";
+"service.mosquitto" = "Mosquitto。面向物联网设备的 MQTT broker。";
+"service.minio" = "MinIO。在本地运行、兼容 S3 的对象存储。";
+"service.consul" = "Consul。服务发现与健康检查。";
+"service.vault" = "Vault。密钥与凭据管理。";
+
+"service.node" = "一个 Node.js 进程。它正在监听，但仅凭命令行无法判断用的是哪个框架。";
+"service.bun" = "一个 Bun 进程。JavaScript 运行时与包管理器。";
+"service.deno" = "一个 Deno 进程。安全的 JavaScript/TypeScript 运行时。";
+"service.python" = "一个监听端口的 Python 进程。";
+"service.ruby" = "一个监听端口的 Ruby 进程。";
+"service.java" = "一个监听端口的 Java 进程。";
+"service.go" = "一个监听端口的 Go 程序。";
+"service.php" = "一个监听端口的 PHP 进程。";
+"service.nginx" = "nginx。Web 服务器与反向代理。";
+"service.caddy" = "Caddy。自动配置 HTTPS 的 Web 服务器。";
+"service.apache" = "Apache httpd。Web 服务器。";
+"service.express" = "Express。Node.js 的 Web 框架，这是一个基于它构建的 API 或 Web 应用。";
+"service.uvicorn" = "Uvicorn。ASGI 服务器，通常运行 FastAPI 或 Starlette。";
+"service.gunicorn" = "Gunicorn。Python 的 WSGI 服务器，通常运行 Flask 或 Django。";
+"service.envoy" = "Envoy 代理。通常是服务网格的数据面或本地网关。";
+"service.s3" = "兼容 S3 的对象存储接口。";
+
+"service.docker" = "Docker。容器运行时，正在转发容器的端口。";
+"service.colima" = "Colima。macOS 上的容器运行时，正在转发容器端口。";
+"service.orbstack" = "OrbStack。macOS 上的容器运行时，正在转发容器端口。";
+
+"service.discord" = "Discord。桌面应用的本地 IPC 端口，供客户端内部通信。";
+"service.wechat" = "微信。桌面应用内部使用的本地端口，不是 Web 服务。";
+"service.slack" = "Slack。桌面应用的本地端口，供内部使用。";
+"service.vscode" = "Visual Studio Code。编辑器使用的本地端口，常用于扩展或调试器。";
+
+"service.airplay" = "AirPlay 接收器。macOS 自带功能，让其他 Apple 设备把音视频串流到这台 Mac。";
+"service.rapportd" = "连续互通。macOS 自带功能：接力、通用剪贴板和随航。";
+"service.sharingd" = "macOS 共享。文件共享与屏幕共享服务。";
+"service.bonjour" = "Bonjour。macOS 在局域网内的服务发现。";
+"service.ssh" = "SSH。远程登录这台机器。";
+"service.http" = "标准 HTTP 端口。";
+"service.https" = "标准 HTTPS 端口。";
+"service.port3000" = "Node.js 常用端口上的开发服务器。PortScope 无法判断具体框架。";
+"service.port8000" = "Python 常用端口上的开发服务器。PortScope 无法判断具体框架。";
+"service.port8080" = "备用 HTTP 常用端口上的 Web 服务器。";
+"service.kafka" = "Apache Kafka。分布式事件流平台。";
