@@ -20,6 +20,10 @@ PortScope answers those questions at a glance, and shows its reasoning.
 - **Every listening port, live.** Loopback, LAN and wildcard binds; IPv4 and
   IPv6 sockets of one service collapsed into a single row. A full scan takes
   about 100 ms and needs no elevated privileges.
+- **Quiet by default.** Desktop apps and macOS services (WeChat, Discord,
+  ControlCenter, `rapportd`) hold ports all day and are never what you open a
+  monitor to look at. They fold into one row — "16 desktop and system ports" —
+  that expands on click. Search still reaches them.
 - **What it is, not just which PID.** Service, framework, project directory,
   HTTP status, and the evidence behind each conclusion. When it is unsure it
   says so — "Node.js, 55%" rather than a confident guess.
@@ -145,6 +149,13 @@ worked around explicitly, and each is documented where it bites:
 | M6 | Compatibility matrix, packaging, docs | ✅ |
 
 Each landed as its own pull request; the write-ups are in `docs/milestones/`.
+
+## The mark
+
+A ring is the port; two pairs of arcs radiate from it. Designed against the
+Bold Minimalism guidance in
+[freshtechbro/claudedesignskills](https://github.com/freshtechbro/claudedesignskills).
+Geometry and rationale in [docs/logo.md](docs/logo.md).
 
 ## License
 
