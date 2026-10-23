@@ -2,3 +2,107 @@
 
 "app.name" = "PortScope";
 "placeholder.subtitle" = "Watching your localhost ports.";
+
+/* MARK: - Common */
+"common.close" = "Close";
+"common.cancel" = "Cancel";
+"common.confirm" = "Confirm";
+"common.copy" = "Copy";
+"common.copied" = "Copied";
+"common.open" = "Open";
+"common.refresh" = "Refresh";
+"common.unknown" = "Unknown";
+"common.none" = "None";
+
+/* MARK: - Evidence */
+"evidence.process" = "Process";
+"evidence.httpHeader" = "HTTP header";
+"evidence.httpStatus" = "HTTP response";
+"evidence.nonHTTP" = "Not HTTP";
+"evidence.wellKnownPort" = "Well-known port";
+"evidence.process.detail" = "argv";
+"evidence.nonHTTP.detail" = "The port accepted a connection but did not answer HTTP.";
+
+/* MARK: - Service summaries */
+"service.unknown" = "PortScope could not identify what this is. The process and its command line are still shown below.";
+"service.genericHTTP" = "An HTTP server that did not identify itself. Open it to see what it serves.";
+"service.genericAPI" = "An HTTP endpoint returning JSON. Likely an API — check its response to see which one.";
+
+"service.vite" = "Vite dev server. Serves your frontend with hot reload while you develop.";
+"service.next" = "Next.js. In dev mode it serves pages with hot reload; in production it serves the built app.";
+"service.nuxt" = "Nuxt dev server for a Vue application, with hot reload.";
+"service.webpack" = "webpack dev server. Bundles your frontend and serves it with live reload.";
+"service.nodemon" = "nodemon wrapper. Restarts a Node process whenever its files change.";
+"service.cra" = "Create React App dev server. Serves a React app with hot reload.";
+"service.angular" = "Angular CLI dev server, with live reload.";
+"service.vuecli" = "Vue CLI dev server, with hot reload.";
+"service.remix" = "Remix dev server. Serves routes with hot reload and server-side rendering.";
+"service.astro" = "Astro dev server. Serves your site with hot reload while you build.";
+"service.sveltekit" = "SvelteKit dev server, with hot reload.";
+"service.storybook" = "Storybook. A browser UI for browsing and testing UI components in isolation.";
+"service.staticServer" = "A static file server. Serves the files in its working directory over HTTP.";
+
+"service.django" = "Django development server. Serves a Python web app — development only, not for production.";
+"service.pythonServer" = "A Python ASGI/WSGI server (Uvicorn or Gunicorn) hosting a web app.";
+"service.flask" = "Flask development server for a Python web app.";
+"service.pythonHTTPServer" = "Python's built-in http.server. Serves the current directory as static files.";
+"service.jupyter" = "Jupyter. A notebook environment in the browser, with a kernel per notebook.";
+"service.streamlit" = "Streamlit. Turns Python scripts into interactive data apps.";
+"service.gradio" = "Gradio. A web UI for a machine-learning model or function.";
+
+"service.redis" = "Redis. An in-memory key-value store used for caching, queues and rate limiting.";
+"service.valkey" = "Valkey, the open-source Redis fork. An in-memory key-value store.";
+"service.memcached" = "Memcached. An in-memory cache, typically in front of a database.";
+"service.postgres" = "PostgreSQL. A relational database.";
+"service.mysql" = "MySQL. A relational database.";
+"service.mongodb" = "MongoDB. A document database.";
+"service.clickhouse" = "ClickHouse. A columnar database for analytics.";
+"service.influxdb" = "InfluxDB. A time-series database.";
+"service.elasticsearch" = "Elasticsearch. A search and analytics engine.";
+"service.qdrant" = "Qdrant. A vector database, usually for embeddings and semantic search.";
+"service.ollama" = "Ollama. Runs local language models and exposes them over an HTTP API.";
+
+"service.rabbitmq" = "RabbitMQ. A message broker for queuing work between services.";
+"service.nats" = "NATS. A lightweight messaging system.";
+"service.mosquitto" = "Mosquitto. An MQTT broker for IoT devices.";
+"service.minio" = "MinIO. S3-compatible object storage running locally.";
+"service.consul" = "Consul. Service discovery and health checking.";
+"service.vault" = "Vault. Secrets management.";
+
+"service.node" = "A Node.js process. It is listening, but PortScope could not tell which framework from the command line alone.";
+"service.bun" = "A Bun process. A JavaScript runtime and package manager.";
+"service.deno" = "A Deno process. A secure JavaScript/TypeScript runtime.";
+"service.python" = "A Python process listening on a port.";
+"service.ruby" = "A Ruby process listening on a port.";
+"service.java" = "A Java process listening on a port.";
+"service.go" = "A Go binary listening on a port.";
+"service.php" = "A PHP process listening on a port.";
+"service.nginx" = "nginx. A web server and reverse proxy.";
+"service.caddy" = "Caddy. A web server with automatic HTTPS.";
+"service.apache" = "Apache httpd. A web server.";
+"service.express" = "Express. A Node.js web framework — this is an API or web app built on it.";
+"service.uvicorn" = "Uvicorn. An ASGI server, usually running FastAPI or Starlette.";
+"service.gunicorn" = "Gunicorn. A Python WSGI server, usually running Flask or Django.";
+"service.envoy" = "Envoy proxy. Usually the data plane of a service mesh or a local gateway.";
+"service.s3" = "S3-compatible object storage API.";
+
+"service.docker" = "Docker. A container runtime, forwarding ports from your containers.";
+"service.colima" = "Colima. A container runtime for macOS, forwarding container ports.";
+"service.orbstack" = "OrbStack. A container runtime for macOS, forwarding container ports.";
+
+"service.discord" = "Discord. The desktop app's local IPC endpoint — it lets the Discord client talk to itself.";
+"service.wechat" = "WeChat. A local port the desktop app uses internally; not a web service.";
+"service.slack" = "Slack. The desktop app's local endpoint, used internally.";
+"service.vscode" = "Visual Studio Code. A local endpoint used by the editor, often for extensions or the debugger.";
+
+"service.airplay" = "AirPlay Receiver. Part of macOS: lets other Apple devices stream audio and video to this Mac.";
+"service.rapportd" = "Continuity. Part of macOS: Handoff, Universal Clipboard and Sidecar between your Apple devices.";
+"service.sharingd" = "macOS Sharing. File and screen sharing services.";
+"service.bonjour" = "Bonjour. macOS service discovery on the local network.";
+"service.ssh" = "SSH. Remote shell access to this machine.";
+"service.http" = "The standard HTTP port.";
+"service.https" = "The standard HTTPS port.";
+"service.port3000" = "A dev server on the conventional Node.js port. PortScope could not identify the framework.";
+"service.port8000" = "A dev server on the conventional Python port. PortScope could not identify the framework.";
+"service.port8080" = "A web server on the conventional alternate HTTP port.";
+"service.kafka" = "Apache Kafka. A distributed event streaming platform.";
