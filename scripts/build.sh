@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+# Build PortScope.app from the SwiftPM target and ad-hoc sign it.
+#
+# Xcode is not required: the app is a SwiftUI executable wrapped in a bundle
+# by this script. Run `scripts/build.sh --release` for a distributable build.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CONFIG="debug"
+if [[ "${1:-}" == "--release" ]]; then CONFIG="release"; fi
+
+APP_NAME="PortScope"
+DIST="$ROOT/dist"
+APP="$DIST/$APP_NAME.app"
+VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo 0.1.0)"
+BUILD="$(date +%Y%m%d%H%M)"
+
+echo "==> Building ($CONFIG)"
+cd "$ROOT"
+swift build -c "$CONFIG" --product "$APP_NAME"
+BIN="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
+
+echo "==> Assembling bundle"
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp "$BIN" "$APP/Contents/MacOS/$APP_NAME"
+
+# SwiftPM emits the resource bundle next to the binary; copy the localizations
+# into the app bundle where Bundle.main will find them at runtime.
+RES_BUNDLE="$(dirname "$BIN")/${APP_NAME}_${APP_NAME}.bundle"
+if [[ -d "$RES_BUNDLE" ]]; then
+    cp -R "$RES_BUNDLE" "$APP/Contents/Resources/"
+fi
+for lproj in "$ROOT"/Sources/PortScope/Resources/*.lproj; do
+    [[ -d "$lproj" ]] && cp -R "$lproj" "$APP/Contents/Resources/"
+done
+
+if [[ -f "$ROOT/Support/AppIcon.icns" ]]; then
+    cp "$ROOT/Support/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+fi
+
+sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" \
+    "$ROOT/Support/Info.plist" > "$APP/Contents/Info.plist"
+printf 'APPL????' > "$APP/Contents/PkgInfo"
+
+echo "==> Signing (ad-hoc)"
+# Ad-hoc signing is enough for local use. A Developer ID signature is only
+# needed to hand the app to another machine.
+codesign --force --deep --sign - "$APP" 2>/dev/null || echo "    (codesign unavailable, continuing unsigned)"
+
+echo "==> Done: $APP"
