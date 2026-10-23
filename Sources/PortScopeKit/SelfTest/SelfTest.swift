@@ -17,26 +17,32 @@ public enum SelfTest {
     }
 
     /// Every check, in run order. Each entry is a name and a body that throws
-    /// on failure.
-    private static var checks: [(String, () throws -> Void)] {
-        LocalizationChecks.all + PortInfoChecks.all + ScannerChecks.all + IdentifierChecks.all + ResourceChecks.all
+    /// on failure. `async` bodies are awaited in order, so checks that spawn
+    /// processes cannot interleave with each other.
+    private static var checks: [(String, () async throws -> Void)] {
+        (LocalizationChecks.all + PortInfoChecks.all + ScannerChecks.all
+            + IdentifierChecks.all + ResourceChecks.all).map { name, body in
+            (name, { try body() })
+        } + ProcessControlChecks.all
     }
 
     @discardableResult
-    public static func run() -> [Result] {
-        checks.map { name, body in
+    public static func run() async -> [Result] {
+        var results: [Result] = []
+        for (name, body) in checks {
             do {
-                try body()
-                return Result(name: name, passed: true, detail: "")
+                try await body()
+                results.append(Result(name: name, passed: true, detail: ""))
             } catch {
-                return Result(name: name, passed: false, detail: "\(error)")
+                results.append(Result(name: name, passed: false, detail: "\(error)"))
             }
         }
+        return results
     }
 
     /// Runs the checks, prints a summary, and returns a process exit code.
     public static func main() -> Int32 {
-        let results = run()
+        let results = runBlocking()
         for result in results {
             let mark = result.passed ? "  ok  " : " FAIL "
             print("[\(mark)] \(result.name)")
@@ -45,6 +51,20 @@ public enum SelfTest {
         let failed = results.filter { !$0.passed }.count
         print("\n\(results.count - failed) passed, \(failed) failed")
         return failed == 0 ? 0 : 1
+    }
+
+    /// Bridges the async checks to the synchronous entry point. The harness has
+    /// no run loop, so this blocks the main thread while the checks run on a
+    /// detached task.
+    private static func runBlocking() -> [Result] {
+        let semaphore = DispatchSemaphore(value: 0)
+        nonisolated(unsafe) var results: [Result] = []
+        Task.detached {
+            results = await run()
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return results
     }
 }
 

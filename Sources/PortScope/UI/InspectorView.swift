@@ -10,6 +10,7 @@ import SwiftUI
 struct InspectorView: View {
     let info: PortInfo
     @EnvironmentObject private var locale: AppLocale
+    @EnvironmentObject private var store: PortStore
     @StateObject private var showCommandLine = LocalFlag()
 
     var body: some View {
@@ -90,8 +91,38 @@ struct InspectorView: View {
                 }
                 Spacer(minLength: 0)
             }
+
+            HStack(spacing: 8) {
+                actionButton(
+                    locale.t("inspector.restart"), symbol: "arrow.clockwise", tint: Theme.accent
+                ) { store.requestRestart(info) }
+                actionButton(
+                    locale.t("inspector.stop"), symbol: "stop.circle", tint: Theme.danger
+                ) { store.requestStop(info) }
+                Spacer(minLength: 0)
+            }
+            .padding(.top, 2)
         }
         .padding(14)
+    }
+
+    private func actionButton(
+        _ title: String, symbol: String, tint: Color, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 5) {
+                Image(systemName: symbol).font(.system(size: 10, weight: .semibold))
+                Text(title).font(.system(size: 11, weight: .medium))
+            }
+            .foregroundStyle(tint)
+            .padding(.horizontal, 10)
+            .frame(height: 26)
+            .background(tint.opacity(0.10), in: RoundedRectangle(cornerRadius: 7))
+            .overlay(
+                RoundedRectangle(cornerRadius: 7).strokeBorder(tint.opacity(0.22), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 
     private func badge(_ text: String, color: Color) -> some View {

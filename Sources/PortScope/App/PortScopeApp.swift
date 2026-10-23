@@ -6,11 +6,13 @@ import SwiftUI
 struct PortScopeApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @StateObject private var locale = AppLocale.shared
+    @StateObject private var store = PortStore()
 
     var body: some Scene {
         WindowGroup(LocalizationSupport.string("app.name", language: locale.language, bundle: .module)) {
-            RootView()
+            RootView(store: store)
                 .environmentObject(locale)
+                .environmentObject(store)
                 .frame(minWidth: 860, minHeight: 520)
         }
         .windowStyle(.hiddenTitleBar)
@@ -29,6 +31,9 @@ enum HeadlessMode {
             exit(SelfTest.main())
         }
         if ListCommand.handleIfNeeded() {
+            exit(0)
+        }
+        if ActionCommand.handleIfNeeded() {
             exit(0)
         }
         return false

@@ -81,6 +81,9 @@ struct PortsView: View {
             NSPasteboard.general.setString(Presentation.hostAndPort(info), forType: .string)
         }
         Divider()
+        Button(locale.t("ports.restart")) { store.requestRestart(info) }
+        Button(locale.t("ports.stop"), role: .destructive) { store.requestStop(info) }
+        Divider()
         Button(locale.t("ports.hide")) { store.hide(port: info.port) }
         Button(locale.t("ports.revealInFinder")) {
             if let cwd = info.workingDirectory {
@@ -192,6 +195,7 @@ struct PortRow: View {
     let isNew: Bool
 
     @EnvironmentObject private var locale: AppLocale
+    @EnvironmentObject private var store: PortStore
     @StateObject private var hovering = LocalFlag()
 
     private var tint: Color { Theme.tint(for: info.service?.kind ?? .other) }
@@ -280,13 +284,19 @@ struct PortRow: View {
                     action: { NSWorkspace.shared.open(url) }
                 )
             }
+            // Destructive actions stay hidden until the row is hovered or
+            // selected: they should be available, never inviting.
             IconButton(
-                systemName: "doc.on.doc",
-                help: locale.t("ports.copyAddress"),
-                action: {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(Presentation.hostAndPort(info), forType: .string)
-                }
+                systemName: "arrow.clockwise",
+                help: locale.t("ports.restart"),
+                action: { store.requestRestart(info) }
+            )
+            .opacity(hovering.value || isSelected ? 1 : 0)
+            IconButton(
+                systemName: "stop.circle",
+                help: locale.t("ports.stop"),
+                tint: Theme.danger.opacity(0.85),
+                action: { store.requestStop(info) }
             )
             .opacity(hovering.value || isSelected ? 1 : 0)
         }
