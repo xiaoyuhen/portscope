@@ -99,7 +99,7 @@ public final class ProcessInspector: @unchecked Sendable {
         var buffer = [CChar](repeating: 0, count: Int(MAXPATHLEN) * 4)
         let length = proc_pidpath(pid, &buffer, UInt32(buffer.count))
         guard length > 0 else { return nil }
-        let path = String(cString: buffer)
+        let path = String(decoding: buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:)), as: UTF8.self)
         return path.isEmpty ? nil : path
     }
 

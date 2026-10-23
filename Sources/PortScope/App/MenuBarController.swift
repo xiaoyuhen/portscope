@@ -133,12 +133,16 @@ final class MenuBarController {
             // the status item is handled by its own action.
             self?.closePanel()
         }
+        // `queue: .main` guarantees the main thread, but the compiler cannot
+        // infer actor isolation from that, so it is asserted explicitly.
         resignObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didResignActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            self?.closePanel()
+            MainActor.assumeIsolated {
+                self?.closePanel()
+            }
         }
     }
 
