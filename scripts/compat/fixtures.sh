@@ -32,6 +32,14 @@ PORT_REDIS=34104
 mkdir -p "$WORK" "$LOG_DIR"
 trap 'cleanup' EXIT
 
+# `python3` is not guaranteed to be on PATH: a bare macOS install may only have
+# `python3.9`, and CI images vary. Find one, or skip the Python case rather than
+# failing the suite for a reason unrelated to PortScope.
+PYTHON=""
+for candidate in python3 python3.13 python3.12 python3.11 python3.10 python3.9; do
+    if command -v "$candidate" >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
+done
+
 PASS=0
 FAIL=0
 declare -a FAILURES=()
@@ -215,7 +223,16 @@ fi
 echo "PortScope portable compatibility matrix"
 echo "  binary: $BIN"
 echo "  work:   $WORK"
+echo "  node:   $(command -v node || echo 'not found')"
+echo "  python: ${PYTHON:-not found}"
 echo
+
+# Three of the four cases need Node. Without it there is nothing meaningful to
+# run, and a silent pass would be worse than a loud skip.
+if ! command -v node >/dev/null 2>&1; then
+    echo "  node is required for the compatibility matrix; install Node.js first." >&2
+    exit 1
+fi
 
 write_fixtures
 
@@ -232,10 +249,15 @@ run_case "plain-node" "$WORK" \
     "kind~web" "process=node"
 
 # 3. Python's built-in static server, loopback-bound. Tests the process tier
-#    for an interpreter whose argv is the only signal.
-run_case "python-http-server" "$WORK" \
-    "python3 -m http.server $PORT_PYTHON --bind 127.0.0.1" "$PORT_PYTHON" \
-    "title=Python http.server" "kind=web" "exposure=loopback"
+#    for an interpreter whose argv is the only signal. Skipped when no Python
+#    is installed: the point is PortScope, not the machine's toolchain.
+if [[ -n "$PYTHON" ]]; then
+    run_case "python-http-server" "$WORK" \
+        "$PYTHON -m http.server $PORT_PYTHON --bind 127.0.0.1" "$PORT_PYTHON" \
+        "title=Python http.server" "kind=web" "exposure=loopback"
+else
+    echo "  SKIP  python-http-server (no python3 on PATH)"
+fi
 
 # 4. Project directory attribution: a server started from a directory with a
 #    package.json should report that project. The name is the directory's
