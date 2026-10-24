@@ -64,13 +64,66 @@ enum ProcessControlChecks {
                     "command"
                 )
             }),
+            // None of the checks below signal anything outside this process's
+            // own children. A refused root used to have its descendants
+            // signalled anyway, and for PID 1 that is the whole login session,
+            // so "can PortScope stop launchd's children" is answered with the
+            // pure planner and with this process as the refused root — never
+            // by pointing a real stop at a system process.
+            ("a refused root plans no targets at all", {
+                let children: [pid_t: [pid_t]] = [1: [100, 200], 100: [101]]
+                let plan = ProcessController.stopPlan(
+                    root: 1, children: children,
+                    refusal: { $0 == 1 ? .systemProcess : nil }
+                )
+                try expectEqual(plan.permitted, [], "permitted")
+                try expectEqual(plan.refused, [1: .systemProcess], "refused")
+            }),
+            ("a refused descendant fences off its own subtree", {
+                // 10 is ours, 20 is another user's helper, 21 runs under it.
+                let children: [pid_t: [pid_t]] = [10: [11, 20], 20: [21]]
+                let plan = ProcessController.stopPlan(
+                    root: 10, children: children,
+                    refusal: { $0 == 20 ? .otherUser : nil }
+                )
+                try expectEqual(plan.permitted, [10, 11], "permitted")
+                try expectEqual(plan.refused, [20: .otherUser], "refused")
+            }),
+            ("stopping a refused root leaves its children running", {
+                let child = try SpawnedChild()
+                defer { child.terminate() }
+                let controller = ProcessController(gracePeriod: 0.2)
+                // This process is refused as `.ownProcess`; its child is ours.
+                let outcome = await controller.stop(pid: getpid())
+                try expect(!outcome.success, "outcome: \(outcome)")
+                try expectEqual(outcome.refused, [getpid(): .ownProcess], "refused")
+                try expect(controller.isRunning(child.pid), "the child was signalled")
+            }),
+            ("a restart that cannot stop the old process starts nothing", {
+                // The old process is still holding the port, so a second copy
+                // would either die on "address in use" or be reported as a
+                // successful restart because the port is (still) listening.
+                let marker = FileManager.default.temporaryDirectory
+                    .appendingPathComponent("portscope-restart-\(UUID().uuidString)")
+                let info = fixtureInfo(arguments: ["/usr/bin/touch", marker.path], pid: getpid())
+                let controller = ProcessController(gracePeriod: 0.2)
+                do {
+                    _ = try await controller.restart(info: info, waitForPort: 1)
+                    throw CheckFailure(description: "a refused restart reported success")
+                } catch ProcessController.RestartError.stopFailed(let refusal) {
+                    try expectEqual(refusal, .ownProcess, "refusal")
+                }
+                try? await Task.sleep(for: .milliseconds(300))
+                try expect(!FileManager.default.fileExists(atPath: marker.path),
+                           "the replacement was spawned anyway")
+            }),
         ]
     }
 
-    private static func fixtureInfo(arguments: [String]) -> PortInfo {
+    private static func fixtureInfo(arguments: [String], pid: pid_t = 4242) -> PortInfo {
         PortInfo(
             port: 3000, addresses: ["127.0.0.1"], exposure: .loopback,
-            pid: 4242, processName: "node",
+            pid: pid, processName: "node",
             executablePath: "/usr/local/bin/node",
             arguments: arguments, workingDirectory: nil,
             uptime: 10, appBundleName: nil, service: nil
