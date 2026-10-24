@@ -125,16 +125,30 @@ enum ResourceChecks {
     /// Parses the `.strings` files directly from the source tree. The harness
     /// runs before the app bundle exists, so it reads the same files the bundle
     /// is built from rather than going through `Bundle`.
+    ///
+    /// `#filePath` names the build machine's checkout, so a released app run
+    /// with `--selftest` cannot find it — it reported three failures for a
+    /// directory on a CI runner. Outside a checkout the tables shipped in the
+    /// app bundle are read instead, which is what a user's copy actually shows.
     private static func loadTables() throws -> (english: [String], chinese: [String]) {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()   // SelfTest
             .deletingLastPathComponent()   // PortScopeKit
             .deletingLastPathComponent()   // Sources
             .deletingLastPathComponent()   // repo root
-        let resources = root
-            .appendingPathComponent("Sources/PortScope/Resources")
+        let sourceResources = root.appendingPathComponent("Sources/PortScope/Resources")
+        let english = "en.lproj/Localizable.strings"
+        let resources: URL
+        if FileManager.default.fileExists(atPath: sourceResources.appendingPathComponent(english).path) {
+            resources = sourceResources
+        } else if let bundled = Bundle.main.resourceURL,
+                  FileManager.default.fileExists(atPath: bundled.appendingPathComponent(english).path) {
+            resources = bundled
+        } else {
+            resources = sourceResources
+        }
         return (
-            try keys(in: resources.appendingPathComponent("en.lproj/Localizable.strings")),
+            try keys(in: resources.appendingPathComponent(english)),
             try keys(in: resources.appendingPathComponent("zh-Hans.lproj/Localizable.strings"))
         )
     }
