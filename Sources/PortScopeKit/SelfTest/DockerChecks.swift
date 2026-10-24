@@ -42,6 +42,22 @@ enum DockerChecks {
                 try expectEqual(service.title, "acme-web-1", "title")
                 try expectEqual(service.projectName, "acme", "project")
             }),
+            ("a database or cache image counts as data, anything else as a container", {
+                let map = DockerEngine.parseContainers(Data(sample.utf8), socket: "/x")
+                try expectEqual(PortScanner.containerService(map[15432]!, http: nil).kind, .database, "postgres:16")
+                let cases: [(String, ServiceInfo.Kind)] = [
+                    ("redis:alpine", .cache),
+                    ("docker.io/library/redis@sha256:0123abcd", .cache),
+                    ("localhost:5000/team/mysql:8", .database),
+                    ("bitnami/postgresql", .container),
+                    ("localhost:5000/redis-proxy", .container),
+                    ("nginx", .container),
+                    ("", .container),
+                ]
+                for (image, kind) in cases {
+                    try expectEqual(PortScanner.containerKind(image: image), kind, image)
+                }
+            }),
             ("containers are read from the engine socket", {
                 let engine = try FakeEngine(response: http(200, body: sample))
                 defer { engine.close() }
