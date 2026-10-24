@@ -36,6 +36,18 @@ enum ActionCommand {
             return 1
         }
 
+        // A container's port belongs to the engine's forwarder; stopping that
+        // process would take every container down. Ask the engine instead.
+        if let container = info.container {
+            let succeeded = restart ? DockerEngine.restart(container) : DockerEngine.stop(container)
+            if succeeded {
+                print("\(restart ? "restarted" : "stopped") container \(container.name) on port \(port)")
+                return 0
+            }
+            FileHandle.standardError.write(Data("PortScope: the Docker engine did not \(restart ? "restart" : "stop") \(container.name)\n".utf8))
+            return 1
+        }
+
         let controller = ProcessController()
         if !restart {
             let outcome = await controller.stop(pid: info.pid)

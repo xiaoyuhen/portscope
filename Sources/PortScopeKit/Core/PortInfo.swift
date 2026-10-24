@@ -33,6 +33,11 @@ public struct PortInfo: Identifiable, Codable, Sendable, Hashable {
     public var appBundleName: String?
 
     /// Classification produced by `ServiceIdentifier` (M2). Nil until resolved.
+    /// The container that publishes this port, when the port belongs to a
+    /// Docker engine. Stop and restart then act on the container, never on
+    /// the engine process that forwards the port.
+    public var container: ContainerInfo? = nil
+
     public var service: ServiceInfo?
 
     public var id: Int { port }

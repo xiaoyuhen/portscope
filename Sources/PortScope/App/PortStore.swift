@@ -297,6 +297,13 @@ final class PortStore: ObservableObject {
         pendingAction = nil
         let info = action.info
 
+        if let container = info.container {
+            await confirmContainerAction(action.kind, container: container, info: info)
+            refreshAfterProcessChange()
+            dismissMessageLater()
+            return
+        }
+
         switch action.kind {
         case .stop:
             let outcome = await controller.stop(pid: info.pid)
@@ -321,6 +328,25 @@ final class PortStore: ObservableObject {
 
         refreshAfterProcessChange()
         dismissMessageLater()
+    }
+
+    /// A container's port is held by the engine's forwarder, and signalling
+    /// that process would stop the engine and every container with it. The
+    /// engine is asked to stop or restart the one container instead.
+    private func confirmContainerAction(
+        _ kind: PendingAction.Kind, container: ContainerInfo, info: PortInfo
+    ) async {
+        let succeeded = await Task.detached {
+            kind == .stop ? DockerEngine.stop(container) : DockerEngine.restart(container)
+        }.value
+        let key: String
+        switch (kind, succeeded) {
+        case (.stop, true): key = "action.containerStopped"
+        case (.stop, false): key = "action.containerStopFailed"
+        case (.restart, true): key = "action.containerRestarted"
+        case (.restart, false): key = "action.containerRestartFailed"
+        }
+        lastActionMessage = ActionMessage(text: key, isError: !succeeded, service: info)
     }
 
     private func stopMessage(for outcome: StopOutcome, info: PortInfo) -> String {

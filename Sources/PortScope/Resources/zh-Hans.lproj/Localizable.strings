@@ -20,6 +20,7 @@
 "evidence.httpStatus" = "HTTP 响应";
 "evidence.nonHTTP" = "非 HTTP";
 "evidence.wellKnownPort" = "常见端口";
+"evidence.container" = "Docker 容器";
 "evidence.process.detail" = "命令行";
 "evidence.nonHTTP.detail" = "该端口接受了连接，但没有返回 HTTP 响应。";
 
@@ -87,6 +88,7 @@
 "service.s3" = "兼容 S3 的对象存储接口。";
 
 "service.docker" = "Docker。容器运行时，正在转发容器的端口。";
+"service.dockerContainer" = "发布此端口的 Docker 容器。停止和重启只作用于这个容器，不会影响 Docker 本身。";
 "service.colima" = "Colima。macOS 上的容器运行时，正在转发容器端口。";
 "service.orbstack" = "OrbStack。macOS 上的容器运行时，正在转发容器端口。";
 
@@ -226,6 +228,12 @@
 "confirm.restart" = "重启";
 "confirm.noWorkingDirectory" = "无法读取该进程的工作目录，将从你的用户目录重新启动。";
 "confirm.appWarning" = "这是一个桌面或系统进程。停止它可能会关闭某个应用或停用某项 macOS 功能。";
+"confirm.containerStopTitle" = "停止这个容器？";
+"confirm.containerStopSubtitle" = "由 Docker 停止这一个容器，等同于 docker stop。其他容器继续运行。";
+"confirm.containerRestartTitle" = "重启这个容器？";
+"confirm.containerRestartSubtitle" = "由 Docker 重启这一个容器，等同于 docker restart。";
+"confirm.container" = "容器";
+"confirm.image" = "镜像";
 "action.stopped" = "已停止 %@。";
 "action.forceStopped" = "已停止 %@。进程未能正常退出，已强制结束。";
 "action.restarted" = "已重启 %@。";
@@ -235,6 +243,10 @@
 "action.refusedOwnProcess" = "未停止：PortScope 不会向自身发送信号。";
 "action.refusedSystem" = "未停止：这是系统进程。";
 "action.processGone" = "该进程已经退出。";
+"action.containerStopped" = "已停止容器 %@。";
+"action.containerStopFailed" = "Docker 未能停止 %@。";
+"action.containerRestarted" = "已重启容器 %@。";
+"action.containerRestartFailed" = "Docker 未能重启 %@。";
 "restartError.unknownCommand" = "无法读取启动它的命令。";
 "restartError.stopFailed" = "正在运行的进程无法停止，因此没有启动第二个。";
 "restartError.directoryMissing" = "它的工作目录已不存在：%@";

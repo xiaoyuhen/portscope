@@ -63,6 +63,11 @@ PortScope answers those questions at a glance, and shows its reasoning.
 - **What it is, not just which PID.** Service, framework, project directory,
   HTTP status, and the evidence behind each conclusion. When it is unsure it
   says so — "Node.js, 55%" rather than a confident guess.
+- **Docker containers by name.** A published port shows the container behind
+  it — `acme-web-1`, image, Compose project — instead of `com.docker.backend`.
+  Stop and Restart act on that one container through the engine API, never on
+  Docker itself. Works with Docker Desktop, OrbStack, Colima and Rancher
+  Desktop; no CLI needed.
 - **Stop and restart.** Confirmed first, children included, verified after. See
   [Safety](#safety) for exactly what it will and will not touch.
 - **A menu bar count.** Closing the window leaves PortScope running in the menu

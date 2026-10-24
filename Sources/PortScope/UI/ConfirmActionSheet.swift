@@ -27,10 +27,10 @@ struct ConfirmActionSheet: View {
                         in: RoundedRectangle(cornerRadius: 8)
                     )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(locale.t(isRestart ? "confirm.restartTitle" : "confirm.stopTitle"))
+                    Text(locale.t(titleKey))
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Theme.textPrimary)
-                    Text(locale.t(isRestart ? "confirm.restartSubtitle" : "confirm.stopSubtitle"))
+                    Text(locale.t(subtitleKey))
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.textSecondary)
                 }
@@ -38,31 +38,20 @@ struct ConfirmActionSheet: View {
             }
 
             VStack(alignment: .leading, spacing: 7) {
-                fact(locale.t("confirm.service"), info.service?.title ?? info.processName)
-                fact(locale.t("confirm.port"), ":\(info.port)")
-                fact(locale.t("confirm.pid"), String(info.pid))
-                if let uptime = info.uptime {
-                    fact(locale.t("confirm.uptime"), Presentation.uptime(uptime))
-                }
-                if isRestart {
-                    fact(locale.t("confirm.command"), info.arguments.first ?? info.processName)
+                if let container = info.container {
+                    fact(locale.t("confirm.container"), container.name)
+                    fact(locale.t("confirm.image"), container.image)
+                    fact(locale.t("confirm.port"), ":\(info.port)")
+                } else {
+                    processFacts
                 }
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.surfaceInset, in: RoundedRectangle(cornerRadius: 8))
 
-            if isRestart, info.workingDirectory == nil {
-                Text(locale.t("confirm.noWorkingDirectory"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.warning)
-            }
-
-            if info.service?.kind == .system || info.appBundleName != nil {
-                Text(locale.t("confirm.appWarning"))
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.warning)
-                    .fixedSize(horizontal: false, vertical: true)
+            if info.container == nil {
+                processWarnings
             }
 
             HStack(spacing: 8) {
@@ -87,6 +76,50 @@ struct ConfirmActionSheet: View {
         .frame(width: 420)
         .background(Theme.surface)
 
+    }
+
+    private var titleKey: String {
+        switch (info.container != nil, isRestart) {
+        case (true, true): return "confirm.containerRestartTitle"
+        case (true, false): return "confirm.containerStopTitle"
+        case (false, true): return "confirm.restartTitle"
+        case (false, false): return "confirm.stopTitle"
+        }
+    }
+
+    private var subtitleKey: String {
+        switch (info.container != nil, isRestart) {
+        case (true, true): return "confirm.containerRestartSubtitle"
+        case (true, false): return "confirm.containerStopSubtitle"
+        case (false, true): return "confirm.restartSubtitle"
+        case (false, false): return "confirm.stopSubtitle"
+        }
+    }
+
+    @ViewBuilder private var processFacts: some View {
+        fact(locale.t("confirm.service"), info.service?.title ?? info.processName)
+        fact(locale.t("confirm.port"), ":\(info.port)")
+        fact(locale.t("confirm.pid"), String(info.pid))
+        if let uptime = info.uptime {
+            fact(locale.t("confirm.uptime"), Presentation.uptime(uptime))
+        }
+        if isRestart {
+            fact(locale.t("confirm.command"), info.arguments.first ?? info.processName)
+        }
+    }
+
+    @ViewBuilder private var processWarnings: some View {
+        if isRestart, info.workingDirectory == nil {
+            Text(locale.t("confirm.noWorkingDirectory"))
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.warning)
+        }
+        if info.service?.kind == .system || info.appBundleName != nil {
+            Text(locale.t("confirm.appWarning"))
+                .font(.system(size: 11))
+                .foregroundStyle(Theme.warning)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// Buttons drawn to match the app rather than the system defaults, which
