@@ -189,11 +189,22 @@ public actor ProcessController {
 
     /// The command to replay. Prefers argv as the kernel reports it, because
     /// that is what actually ran — including flags a person has forgotten.
+    ///
+    /// A bare `argv[0]` (`node`, as npm and npx spawn it) is replaced by the
+    /// executable the kernel says is running. The replay shell is a login shell,
+    /// which reads `.zprofile` but not `.zshrc` — and `.zshrc` is where nvm,
+    /// fnm and asdf put themselves on PATH — so a bare `node` was "command not
+    /// found" and the restart died on startup. The absolute path is also simply
+    /// more faithful: it is the binary that was running, not whichever one PATH
+    /// would pick today.
     public nonisolated func restartCommand(for info: PortInfo) -> String? {
-        let arguments = info.arguments.filter { !$0.isEmpty }
+        var arguments = info.arguments.filter { !$0.isEmpty }
         guard !arguments.isEmpty else {
             guard let path = info.executablePath else { return nil }
             return Self.quote(path)
+        }
+        if !arguments[0].contains("/"), let path = info.executablePath {
+            arguments[0] = path
         }
         return arguments.map(Self.quote).joined(separator: " ")
     }

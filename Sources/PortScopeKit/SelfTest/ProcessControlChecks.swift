@@ -47,11 +47,22 @@ enum ProcessControlChecks {
                 try expectEqual(ProcessController.quote("a b"), "'a b'", "space")
             }),
             ("a restart command replays the original argv", {
-                let info = fixtureInfo(arguments: ["node", "scripts/dev.js", "--port", "3000"])
+                let info = fixtureInfo(arguments: ["/opt/bin/node", "scripts/dev.js", "--port", "3000"])
                 let controller = ProcessController()
                 try expectEqual(
                     controller.restartCommand(for: info),
-                    "'node' 'scripts/dev.js' '--port' '3000'",
+                    "'/opt/bin/node' 'scripts/dev.js' '--port' '3000'",
+                    "command"
+                )
+            }),
+            ("a bare argv[0] is replayed as the running executable", {
+                // npm spawns `node …` by name. The replay shell does not read
+                // .zshrc, where nvm lives, so the name alone is not found.
+                let info = fixtureInfo(arguments: ["node", "scripts/dev.js"])
+                let controller = ProcessController()
+                try expectEqual(
+                    controller.restartCommand(for: info),
+                    "'/usr/local/bin/node' 'scripts/dev.js'",
                     "command"
                 )
             }),
