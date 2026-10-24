@@ -28,6 +28,7 @@ public enum SelfTest {
             + ScannerChecks.all
             + IdentifierChecks.all
             + ResourceChecks.all
+            + UpdateChecks.all
         for (name, body) in synchronous {
             all.append((name, { try body() }))
         }

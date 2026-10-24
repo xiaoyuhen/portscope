@@ -197,6 +197,13 @@
 "settings.loginApproval" = "Waiting for you to allow it in System Settings → General → Login Items.";
 "settings.loginOpenSettings" = "Open Settings";
 "settings.loginFailed" = "macOS did not allow it: %@";
+"settings.updatesTitle" = "Check for updates automatically";
+"settings.updatesSubtitle" = "Once a day, from GitHub. Nothing is installed without asking.";
+"settings.updatesCheck" = "Check now";
+"settings.updatesShow" = "Show update";
+"settings.updatesChecking" = "Checking…";
+"settings.updatesCurrent" = "PortScope %@ is the latest version.";
+"settings.updatesAvailable" = "PortScope %@ is available.";
 "settings.telemetryTitle" = "Anonymous launch count";
 "settings.telemetrySubtitle" = "Sends the app version and a random install ID, once a day. Never what is listening on your ports.";
 "settings.hiddenTitle" = "Hidden ports";
@@ -257,6 +264,22 @@
 "menubar.tooltip" = "%d ports listening";
 "menubar.openApp" = "Open PortScope";
 "menubar.quit" = "Quit PortScope";
+"menubar.update" = "Update to %@";
+"update.title" = "A new version of PortScope is available";
+"update.versions" = "PortScope %@ is available — you have %@.";
+"update.notes" = "What's new";
+"update.noNotes" = "No release notes were published with this version.";
+"update.skip" = "Skip This Version";
+"update.later" = "Remind Me Later";
+"update.install" = "Install and Relaunch";
+"update.downloading" = "Downloading and verifying…";
+"update.installing" = "Installing. PortScope will reopen in a moment.";
+"update.failed" = "The update did not complete: %@";
+"update.error.feed" = "GitHub did not return a usable release.";
+"update.error.download" = "The download did not come from GitHub.";
+"update.error.checksum" = "The download does not match its published checksum, so it was not installed.";
+"update.error.bundle" = "The downloaded app is not a valid PortScope of that version, so it was not installed.";
+"update.error.location" = "This copy cannot be replaced where it is. The release page has been opened instead; move PortScope to Applications to update in place next time.";
 
 /* MARK: - Background services */
 "ports.backgroundHidden" = "%d desktop and system ports";

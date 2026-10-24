@@ -243,6 +243,7 @@ struct SettingsView: View {
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
     @StateObject private var loginItem = LoginItem()
+    @ObservedObject private var updater = Updater.shared
     /// Mirrors the telemetry preference so the switch redraws when flipped:
     /// a binding straight to `UserDefaults` changes the value but not the view.
     @StateObject private var telemetryOn = LocalFlag(Telemetry.isEnabled)
@@ -343,6 +344,32 @@ struct SettingsView: View {
 
                         Hairline()
 
+                        row(
+                            title: locale.t("settings.updatesTitle"),
+                            subtitle: updateSubtitle
+                        ) {
+                            HStack(spacing: 8) {
+                                Button(locale.t(updater.pending == nil ? "settings.updatesCheck" : "settings.updatesShow")) {
+                                    if updater.pending != nil {
+                                        updater.presentWindow?()
+                                    } else {
+                                        Task { await updater.check(userInitiated: true) }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                                .font(.system(size: 11))
+                                .foregroundStyle(Theme.accent)
+                                .disabled(updater.state == .checking)
+                                Toggle("", isOn: $updater.checksAutomatically)
+                                    .labelsHidden()
+                                    .toggleStyle(.switch)
+                                    .controlSize(.small)
+                                    .accessibilityLabel(locale.t("settings.updatesTitle"))
+                            }
+                        }
+
+                        Hairline()
+
                         // Telemetry is a switch in the place people look for
                         // settings, not a line in a document. It is on by
                         // default; turning it off takes effect immediately and
@@ -395,6 +422,17 @@ struct SettingsView: View {
                 }
             }
             .padding(Theme.gutter)
+        }
+    }
+
+    private var updateSubtitle: String {
+        switch updater.state {
+        case .checking: return locale.t("settings.updatesChecking")
+        case .upToDate: return locale.t("settings.updatesCurrent", updater.currentVersion)
+        case .failed(let reason): return locale.t("update.failed", reason)
+        default:
+            if let release = updater.pending { return locale.t("settings.updatesAvailable", release.version) }
+            return locale.t("settings.updatesSubtitle")
         }
     }
 

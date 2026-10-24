@@ -28,6 +28,12 @@ Worth knowing before you assess an issue, because the app touches processes:
 - **It connects only to loopback.** The HTTP prober connects to `127.0.0.1` and
   `::1`, never to a LAN address, even for a service bound to `0.0.0.0`. It
   sends `GET /` and reads a bounded number of bytes.
+- **Updates are verified before they are installed.** The zip must match the
+  SHA-256 published beside it, come from GitHub over HTTPS, contain PortScope
+  with the advertised version and bundle identifier, and pass
+  `codesign --verify`. Without a Developer ID that signature is ad hoc, so the
+  trust anchor is the GitHub release itself — in scope: anything that gets a
+  different file installed.
 - **Telemetry sends no local data.** One event, once per version per day, with
   the app version and a random install ID. Never a port, process, path or
   hostname. See [docs/privacy.md](docs/privacy.md) and the switch in Settings.
