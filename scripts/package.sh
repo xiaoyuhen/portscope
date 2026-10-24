@@ -3,8 +3,8 @@
 #
 # The app is ad-hoc signed, which is enough to run on this machine and to hand
 # to someone who trusts you. It is NOT notarised: opening it on another Mac
-# requires right-click → Open the first time, or
-# `xattr -dr com.apple.quarantine /Applications/PortScope.app`.
+# requires `xattr -dr com.apple.quarantine /Applications/PortScope.app`, or
+# System Settings → Privacy & Security → Open Anyway, the first time.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

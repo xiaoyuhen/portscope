@@ -12,12 +12,14 @@
 从 [Releases](https://github.com/xiaoyuhen/portscope/releases) 下载最新的
 `PortScope-x.y.z.zip`，解压后把 `PortScope.app` 拖进「应用程序」。
 
-构建产物是**临时签名（ad-hoc）、未经过公证**的，所以第一次打开需要右键 →「打开」，
-或者执行：
+构建产物是**临时签名（ad-hoc）、未经过公证**的，macOS 会拦下第一次启动。可以执行一次：
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/PortScope.app
 ```
+
+或者先打开一次、关掉警告，再到「系统设置 → 隐私与安全性」里点「仍要打开」。
+（macOS 14 上右键 →「打开」也可以；macOS 15 起取消了这个捷径。）
 
 需要 macOS 14 (Sonoma) 及以上，Apple 芯片与 Intel 都支持。
 
@@ -138,7 +140,7 @@ PortScope 会改动你的机器，因此规则写在代码里：
 三层，因为它们能发现的问题不一样。
 
 ```bash
-PortScope --selftest              # 56 项逻辑检查
+PortScope --selftest              # 逻辑检查，失败时退出码为 1
 ./scripts/compat/fixtures.sh      # 4 个真实服务器：识别、停止
 ./scripts/validate.sh             # 20 项针对运行中应用的界面检查
 ```

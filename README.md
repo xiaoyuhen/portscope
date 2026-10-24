@@ -14,12 +14,16 @@ Download the latest `PortScope-x.y.z.zip` from
 [Releases](https://github.com/xiaoyuhen/portscope/releases), unzip, and drag
 `PortScope.app` to Applications.
 
-The build is **ad-hoc signed, not notarised**, so the first launch needs
-right-click → **Open**, or:
+The build is **ad-hoc signed, not notarised**, so macOS blocks the first
+launch. Either clear the quarantine flag once:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/PortScope.app
 ```
+
+or open it, dismiss the warning, and press **Open Anyway** in System Settings →
+Privacy & Security. (On macOS 14, right-click → **Open** also works; macOS 15
+removed that shortcut.)
 
 Requires macOS 14 (Sonoma) or later. Apple silicon and Intel both work.
 
@@ -154,7 +158,7 @@ you pass `PORTSCOPE_TELEMETRY_URL` explicitly.
 Three layers, because they catch different things.
 
 ```bash
-PortScope --selftest              # 56 logic checks
+PortScope --selftest              # logic checks, exit 1 on failure
 ./scripts/compat/fixtures.sh      # 4 real servers, identified and stopped
 ./scripts/validate.sh             # 20 UI checks against the running app
 ```

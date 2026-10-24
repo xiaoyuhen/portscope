@@ -33,7 +33,7 @@ permission for your terminal and a GUI session.
 
 ```bash
 swift build
-PortScope --selftest              # 56 logic checks
+PortScope --selftest              # logic checks, exit 1 on failure
 ./scripts/validate.sh             # 20 UI checks, drives the real app
 ```
 
