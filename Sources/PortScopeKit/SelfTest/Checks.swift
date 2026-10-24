@@ -12,12 +12,18 @@ enum LocalizationChecks {
             ("English is the fallback language", {
                 try expectEqual(LocalizationSupport.supportedLanguages.first, "en", "fallback")
             }),
-            ("preferred language is always supported", {
-                try expect(
-                    LocalizationSupport.supportedLanguages.contains(
-                        LocalizationSupport.preferredLanguage()),
-                    "preferred language not in the supported list"
-                )
+            ("a fresh install starts in English", {
+                // The system locale must not decide this: on a Chinese Mac the
+                // app still opens in English until Chinese is chosen.
+                try expectEqual(LocalizationSupport.resolve(stored: nil), "en", "unset")
+                try expectEqual(LocalizationSupport.resolve(stored: ""), "en", "empty")
+            }),
+            ("an explicit choice is honoured", {
+                try expectEqual(LocalizationSupport.resolve(stored: "zh-Hans"), "zh-Hans", "chosen")
+            }),
+            ("an unknown stored language falls back to English", {
+                try expectEqual(LocalizationSupport.resolve(stored: "fr"), "en", "unknown")
+                try expectEqual(LocalizationSupport.resolve(stored: "zh-Hant"), "en", "unsupported")
             }),
         ]
     }
@@ -161,20 +167,163 @@ enum BackgroundClassificationChecks {
                     "node server must stay visible"
                 )
             }),
+            // The point of the rule is that it generalises. An app nobody has
+            // heard of must fold without being added to any list.
+            ("an unknown chat app is folded without being named", {
+                try expect(
+                    BackgroundClassification.isBackground(
+                        port(kind: .messaging, bundle: "SomeNewChatApp")),
+                    "unnamed app must fold"
+                )
+            }),
+            ("an Apple daemon in a system directory is folded", {
+                try expect(
+                    BackgroundClassification.isBackground(
+                        port(kind: .other, bundle: nil, executable: "/usr/libexec/rapportd")),
+                    "system daemon must fold"
+                )
+            }),
+            ("a developer runtime in a system directory stays visible", {
+                // python3 lives in /usr/bin; the executable check has to win
+                // over the system-path check, or `python3 -m http.server`
+                // would disappear into the folded section.
+                try expect(
+                    !BackgroundClassification.isBackground(
+                        port(kind: .web, bundle: nil, executable: "/usr/bin/python3")),
+                    "python server must stay visible"
+                )
+            }),
+            ("a versioned runtime is recognised", {
+                try expect(
+                    !BackgroundClassification.isBackground(
+                        port(kind: .web, bundle: nil, executable: "/opt/homebrew/bin/python3.12")),
+                    "python3.12 must stay visible"
+                )
+            }),
+            ("a process in a project directory stays visible", {
+                try expect(
+                    !BackgroundClassification.isBackground(
+                        port(kind: .web, bundle: nil, executable: "/opt/homebrew/bin/rails",
+                             projectPath: "/Users/x/app")),
+                    "project process must stay visible"
+                )
+            }),
+            ("an unidentified process is not hidden", {
+                // Folding what we cannot explain would hide the one row the
+                // user most wants to see.
+                try expect(
+                    !BackgroundClassification.isBackground(
+                        port(kind: .other, bundle: nil, executable: "/opt/homebrew/bin/mystery")),
+                    "unknown binary must stay visible"
+                )
+            }),
+            ("a developer app bundle stays visible", {
+                // Docker's listener is `com.docker.backend`, which the runtime
+                // list recognises before the bundle rule can fold it.
+                try expect(
+                    !BackgroundClassification.isBackground(
+                        port(kind: .container, bundle: "Docker Desktop",
+                             executable: "/Applications/Docker.app/Contents/MacOS/com.docker.backend")),
+                    "Docker backend must stay visible"
+                )
+            }),
+            ("a developer app whose binary is not a runtime is still folded", {
+                // VS Code holds a port for its own extension host. It is a GUI
+                // app, not something the user started as a server, so it folds.
+                try expect(
+                    BackgroundClassification.isBackground(
+                        port(kind: .web, bundle: "Visual Studio Code",
+                             executable: "/Applications/Visual Studio Code.app/Contents/MacOS/Code Helper")),
+                    "VS Code should fold"
+                )
+            }),
+            ("a third-party app with no category is folded", {
+                // magpie declares no LSApplicationCategoryType; the rule cannot
+                // depend on metadata an app may omit.
+                try expect(
+                    BackgroundClassification.isBackground(
+                        port(kind: .api, bundle: "magpie",
+                             executable: "/Applications/magpie.app/Contents/MacOS/magpie")),
+                    "magpie should fold"
+                )
+            }),
         ]
     }
 
-    private static func port(kind: ServiceInfo.Kind, bundle: String?) -> PortInfo {
+    private static func port(
+        kind: ServiceInfo.Kind,
+        bundle: String?,
+        executable: String = "/x",
+        projectPath: String? = nil
+    ) -> PortInfo {
         PortInfo(
             port: 4000, addresses: ["127.0.0.1"], exposure: .loopback,
-            pid: 99, processName: "proc", executablePath: "/x",
+            pid: 99, processName: "proc", executablePath: executable,
             arguments: [], workingDirectory: nil, uptime: 1,
             appBundleName: bundle,
             service: ServiceInfo(
                 kind: kind, title: "t", summaryKey: "s", confidence: 0.9,
                 evidence: [], httpStatus: nil, serverHeader: nil,
-                projectPath: nil, projectName: nil
+                projectPath: projectPath, projectName: nil
             )
+        )
+    }
+}
+
+/// The window and the menu bar panel draw `PortListModel.rows`. These checks
+/// pin the behaviour both of them depend on — the surfaces can only stay in
+/// agreement if the rows they are handed are right.
+enum PortListModelChecks {
+    static var all: [(String, () async throws -> Void)] {
+        [
+            ("background ports are folded behind a disclosure", {
+                let rows = PortListModel.rows(
+                    foreground: [port(3000)], background: [port(5000), port(5001)],
+                    backgroundExpanded: false, searching: false
+                )
+                try expectEqual(rows.count, 2, "one port plus the disclosure")
+                try expect(rows.first == .port(port(3000), muted: false), "foreground first")
+                try expect(rows.last == .backgroundDisclosure(count: 2), "disclosure last")
+            }),
+            ("an expanded list has no disclosure row", {
+                let rows = PortListModel.rows(
+                    foreground: [port(3000)], background: [port(5000)],
+                    backgroundExpanded: true, searching: false
+                )
+                try expectEqual(rows.count, 2, "both ports")
+                try expect(rows.last == .port(port(5000), muted: true), "background is muted")
+            }),
+            ("a search shows background matches while folded", {
+                let rows = PortListModel.rows(
+                    foreground: [], background: [port(14013)],
+                    backgroundExpanded: false, searching: true
+                )
+                try expectEqual(rows.count, 1, "the match")
+                try expect(rows.first == .port(port(14013), muted: true), "muted match")
+            }),
+            ("no disclosure is offered when nothing is folded", {
+                let rows = PortListModel.rows(
+                    foreground: [port(3000)], background: [],
+                    backgroundExpanded: false, searching: false
+                )
+                try expectEqual(rows.count, 1, "just the port")
+            }),
+            ("row ids are unique", {
+                let rows = PortListModel.rows(
+                    foreground: [port(3000), port(4000)], background: [port(5000)],
+                    backgroundExpanded: true, searching: false
+                )
+                try expectEqual(Set(rows.map(\.id)).count, rows.count, "duplicate row id")
+            }),
+        ]
+    }
+
+    private static func port(_ number: Int) -> PortInfo {
+        PortInfo(
+            port: number, addresses: ["127.0.0.1"], exposure: .loopback,
+            pid: 99, processName: "proc", executablePath: "/x",
+            arguments: [], workingDirectory: nil, uptime: 1,
+            appBundleName: nil, service: nil
         )
     }
 }

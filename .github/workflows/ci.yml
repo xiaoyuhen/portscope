@@ -33,3 +33,11 @@ jobs:
           test -x dist/PortScope.app/Contents/MacOS/PortScope
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" dist/PortScope.app/Contents/Info.plist
           codesign -dv dist/PortScope.app 2>&1 | head -5
+
+      # The UI checks drive a real app through Accessibility. A CI runner is a
+      # headless macOS instance: there is no logged-in GUI session to attach
+      # to, so the harness cannot see a window and every check would fail for a
+      # reason that has nothing to do with the change. It runs locally (see
+      # README › Validation); CI compiles it so it cannot rot.
+      - name: Compile the UI harness
+        run: swiftc -O -parse-as-library Support/Validation/Validation.swift -o /tmp/validate

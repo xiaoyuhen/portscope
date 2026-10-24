@@ -9,6 +9,15 @@ public enum LocalizationSupport {
     /// Languages PortScope ships, in fallback order.
     public static let supportedLanguages = ["en", "zh-Hans"]
 
+    /// The language the app starts in for everyone.
+    ///
+    /// Deliberately not the system language: PortScope's vocabulary is
+    /// developer vocabulary, and the English terms (dev server, bundler,
+    /// listener, exposure) are the ones people search for. A Chinese macOS
+    /// would otherwise land a user in a translated UI they never asked for.
+    /// Simplified Chinese is one explicit choice away in Settings.
+    public static let defaultLanguage = "en"
+
     /// Native name of a language, always written in that language.
     public static func displayName(for language: String) -> String {
         switch language {
@@ -17,15 +26,11 @@ public enum LocalizationSupport {
         }
     }
 
-    /// First supported language matching the user's system preference.
-    public static func preferredLanguage() -> String {
-        for preferred in Locale.preferredLanguages {
-            for supported in supportedLanguages
-            where preferred == supported || preferred.hasPrefix(supported + "-") {
-                return supported
-            }
-        }
-        return "en"
+    /// Resolves a stored preference to a language the app can actually show.
+    /// Anything unset, unknown or stale falls back to English.
+    public static func resolve(stored: String?) -> String {
+        guard let stored, supportedLanguages.contains(stored) else { return defaultLanguage }
+        return stored
     }
 
     /// Looks `key` up in `language`, then English, then returns the key itself.

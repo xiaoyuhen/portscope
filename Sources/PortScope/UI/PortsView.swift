@@ -53,36 +53,23 @@ struct PortsView: View {
     private var rowList: some View {
         ScrollView {
             LazyVStack(spacing: 0) {
-                // Foreground rows first. When the background section is open
-                // (or a search is active) `visiblePorts` already contains both
-                // sets, so the muted group is only drawn separately while it is
-                // folded — otherwise every background row would appear twice.
-                ForEach(store.foregroundPorts) { info in
-                    row(for: info, muted: false)
-                }
-                if isSearching {
-                    // Typing "wechat" must find WeChat whether or not the
-                    // section is open, so search shows matches from both sets.
-                    ForEach(store.backgroundPorts) { info in
-                        row(for: info, muted: true)
+                // The rows come from the store, not from filters here: the menu
+                // bar panel draws the same array, so the two surfaces cannot
+                // disagree about which ports exist or which are folded.
+                ForEach(store.rows) { row in
+                    switch row {
+                    case .port(let info, let muted):
+                        portRow(for: info, muted: muted)
+                    case .backgroundDisclosure(let count):
+                        backgroundDisclosure(count: count)
                     }
-                } else if store.showBackgroundServices {
-                    ForEach(store.backgroundPorts) { info in
-                        row(for: info, muted: true)
-                    }
-                } else if !isSearching && store.backgroundCount > 0 {
-                    backgroundDisclosure
                 }
             }
         }
         .scrollContentBackground(.hidden)
     }
 
-    private var isSearching: Bool {
-        !store.searchText.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
-    private func row(for info: PortInfo, muted: Bool) -> some View {
+    private func portRow(for info: PortInfo, muted: Bool) -> some View {
         VStack(spacing: 0) {
             PortRow(
                 info: info,
@@ -102,7 +89,7 @@ struct PortsView: View {
     /// The count is the whole reason this exists: it tells you that six ports
     /// are folded away without making you read six rows of WeChat and
     /// ControlCenter to find out.
-    private var backgroundDisclosure: some View {
+    private func backgroundDisclosure(count: Int) -> some View {
         VStack(spacing: 0) {
             Button {
                 withAnimation(.easeOut(duration: 0.15)) {
@@ -113,7 +100,7 @@ struct PortsView: View {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 8, weight: .semibold))
                         .foregroundStyle(Theme.textTertiary)
-                    Text(locale.t("ports.backgroundHidden", store.backgroundCount))
+                    Text(locale.t("ports.backgroundHidden", count))
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.textSecondary)
                     Spacer()

@@ -111,12 +111,30 @@ final class PortStore: ObservableObject {
         matchingPorts.filter { Self.isBackgroundService($0) }
     }
 
+    /// The rows the list draws, shared by the window and the menu bar panel.
+    ///
+    /// Both surfaces read this one value rather than filtering for themselves.
+    /// They used to do their own filtering and drifted apart — the popover
+    /// showed WeChat and ControlCenter inline while the window folded them.
+    var rows: [PortListRow] {
+        PortListModel.rows(
+            foreground: foregroundPorts,
+            background: backgroundPorts,
+            backgroundExpanded: showBackgroundServices,
+            searching: isSearching
+        )
+    }
+
+    /// Whether a search is narrowing the list.
+    var isSearching: Bool {
+        !searchText.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     /// Rows the list actually shows: the foreground set, plus the background
     /// set when it has been expanded (or when a search matches one of them —
     /// typing "wechat" should find WeChat whether or not the section is open).
     var visiblePorts: [PortInfo] {
-        let searching = !searchText.trimmingCharacters(in: .whitespaces).isEmpty
-        if showBackgroundServices || searching {
+        if showBackgroundServices || isSearching {
             return matchingPorts
         }
         return foregroundPorts
