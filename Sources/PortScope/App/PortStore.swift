@@ -88,6 +88,7 @@ final class PortStore: ObservableObject {
     private var scanTask: Task<Void, Never>?
 
     init(refreshInterval: TimeInterval? = nil) {
+        LegacyPreferences.migrateIfNeeded()
         // `didSet` does not fire during init, so the stored value is read
         // explicitly rather than relied on to be applied by the property.
         let storedInterval = UserDefaults.standard.double(forKey: Self.refreshKey)

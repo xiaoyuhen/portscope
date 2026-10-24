@@ -9,7 +9,7 @@ stays there.
   lines, working directories, project names, HTTP headers and status codes are
   read and displayed, never transmitted.
 - **Your preferences.** Language, refresh interval, hidden ports and the
-  telemetry switch live in `~/Library/Preferences/com.portscope.app.plist`.
+  telemetry switch live in `~/Library/Preferences/io.github.xiaoyuhen.portscope.plist`.
 - **Restart logs.** Output goes to `~/Library/Logs/PortScope/`.
 - **Your shell environment.** It is never read: it routinely holds API keys.
 
@@ -53,7 +53,7 @@ Any of these works:
 
 1. **Settings → Anonymous launch count → off.** Takes effect immediately and
    stops any further send.
-2. `defaults write com.portscope.app PortScope.telemetry -bool NO`
+2. `defaults write io.github.xiaoyuhen.portscope PortScope.telemetry -bool NO`
 3. Build without an endpoint: leave `PORTSCOPE_TELEMETRY_URL` unset and the app
    has nowhere to send.
 4. `PORTSCOPE_NO_TELEMETRY=1` in the environment disables it at runtime.

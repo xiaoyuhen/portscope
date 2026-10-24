@@ -7,7 +7,7 @@
     <key>CFBundleExecutable</key>
     <string>PortScope</string>
     <key>CFBundleIdentifier</key>
-    <string>com.portscope.app</string>
+    <string>io.github.xiaoyuhen.portscope</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>

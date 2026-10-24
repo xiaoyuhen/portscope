@@ -27,7 +27,7 @@ import PortScopeKit
 ///   path above.
 /// * The receiver stores a coarse daily count, not a per-request log.
 ///
-/// **Opting out:** `defaults write com.portscope.app PortScope.telemetry -bool NO`,
+/// **Opting out:** `defaults write io.github.xiaoyuhen.portscope PortScope.telemetry -bool NO`,
 /// the toggle in Settings, or launch with `PORTSCOPE_NO_TELEMETRY=1` in the
 /// environment. A build with no `PORTSCOPE_TELEMETRY_URL` has no endpoint and
 /// never sends anything. `--selftest` and every other headless command never send
@@ -51,6 +51,7 @@ public enum Telemetry {
     /// Whether the user has left telemetry on. Off by default only when the
     /// environment says so; otherwise on, with a visible switch in Settings.
     public static var isEnabled: Bool {
+        LegacyPreferences.migrateIfNeeded()
         if ProcessInfo.processInfo.environment["PORTSCOPE_NO_TELEMETRY"] != nil { return false }
         let defaults = UserDefaults.standard
         if defaults.object(forKey: defaultsKey) == nil { return true }
