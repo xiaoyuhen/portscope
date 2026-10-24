@@ -22,6 +22,14 @@ enum ScannerChecks {
                 try expect(addresses.contains("127.0.0.1"),
                            "expected 127.0.0.1 among \(addresses)")
             }),
+            ("a service bound to ::1 alone is probed on ::1", {
+                // Node 18+ binds `localhost` to ::1 only; probing 127.0.0.1
+                // there found nothing and the HTTP evidence was lost.
+                try expectEqual(HTTPProber.loopbackHost(for: ["::1"]), "[::1]", "::1")
+                try expectEqual(HTTPProber.loopbackHost(for: ["::"]), "[::1]", "::")
+                try expectEqual(HTTPProber.loopbackHost(for: ["127.0.0.1", "::1"]), "127.0.0.1", "dual")
+                try expectEqual(HTTPProber.loopbackHost(for: ["0.0.0.0"]), "127.0.0.1", "wildcard")
+            }),
             ("aggregation keeps one row per port", {
                 let listeners = [
                     RawListener(pid: 10, port: 8080, address: "127.0.0.1", family: AF_INET),

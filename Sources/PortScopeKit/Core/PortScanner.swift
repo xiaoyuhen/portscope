@@ -36,7 +36,7 @@ public actor PortScanner {
                     .first { $0.matches(details) }?.match
                 return identifier.shouldProbe(port: info.port, kind: processMatch?.kind)
             }
-            probes = await probeAll(candidates.map(\.port))
+            probes = await probeAll(candidates)
         }
 
         ports = ports.map { info in
@@ -75,15 +75,16 @@ public actor PortScanner {
     /// A batch of 16 with a 1 s timeout keeps the socket count modest and cuts
     /// the cold path roughly in half. The timeout is still generous enough for
     /// a local HTTP server, which answers in single-digit milliseconds.
-    private func probeAll(_ ports: [Int]) async -> [Int: HTTPProbeResult] {
+    private func probeAll(_ ports: [PortInfo]) async -> [Int: HTTPProbeResult] {
         var results: [Int: HTTPProbeResult] = [:]
         let batchSize = 16
         for start in stride(from: 0, to: ports.count, by: batchSize) {
             let batch = Array(ports[start..<min(start + batchSize, ports.count)])
             await withTaskGroup(of: (Int, HTTPProbeResult?).self) { group in
-                for port in batch {
+                for info in batch {
+                    let host = HTTPProber.loopbackHost(for: info.addresses)
                     group.addTask { [prober] in
-                        (port, await prober.probe(port: port))
+                        (info.port, await prober.probe(port: info.port, host: host))
                     }
                 }
                 for await (port, result) in group {
