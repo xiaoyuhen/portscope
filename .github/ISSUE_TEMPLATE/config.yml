@@ -1,0 +1,11 @@
+# Issue chooser. Without this file GitHub lists the templates as plain links;
+# with it they appear as a menu, which is the difference between a visitor
+# picking the right form and filing everything as a generic bug.
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/xiaoyuhen/portscope/security/advisories/new
+    about: Report a vulnerability privately. Please do not open a public issue.
+  - name: Usage notes and documentation
+    url: https://github.com/xiaoyuhen/portscope#readme
+    about: Install steps, how identification works, and the privacy policy.
