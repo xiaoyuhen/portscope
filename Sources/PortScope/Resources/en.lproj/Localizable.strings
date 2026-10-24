@@ -20,6 +20,7 @@
 "evidence.httpStatus" = "HTTP response";
 "evidence.nonHTTP" = "Not HTTP";
 "evidence.wellKnownPort" = "Well-known port";
+"evidence.container" = "Docker container";
 "evidence.process.detail" = "argv";
 "evidence.nonHTTP.detail" = "The port accepted a connection but did not answer HTTP.";
 
@@ -87,6 +88,7 @@
 "service.s3" = "S3-compatible object storage API.";
 
 "service.docker" = "Docker. A container runtime, forwarding ports from your containers.";
+"service.dockerContainer" = "A Docker container publishing this port. Stop and Restart act on the container, not on Docker.";
 "service.colima" = "Colima. A container runtime for macOS, forwarding container ports.";
 "service.orbstack" = "OrbStack. A container runtime for macOS, forwarding container ports.";
 
@@ -226,6 +228,12 @@
 "confirm.restart" = "Restart";
 "confirm.noWorkingDirectory" = "This process has no readable working directory. It will be restarted from your home directory.";
 "confirm.appWarning" = "This is a desktop or system process. Stopping it may close an app or disable a macOS feature.";
+"confirm.containerStopTitle" = "Stop this container?";
+"confirm.containerStopSubtitle" = "Docker stops this one container, as docker stop does. Other containers keep running.";
+"confirm.containerRestartTitle" = "Restart this container?";
+"confirm.containerRestartSubtitle" = "Docker restarts this one container, as docker restart does.";
+"confirm.container" = "Container";
+"confirm.image" = "Image";
 "action.stopped" = "Stopped %@.";
 "action.forceStopped" = "Stopped %@. It did not exit cleanly, so it was force-killed.";
 "action.restarted" = "Restarted %@.";
@@ -235,6 +243,10 @@
 "action.refusedOwnProcess" = "Not stopped: PortScope will not signal itself.";
 "action.refusedSystem" = "Not stopped: this is a system process.";
 "action.processGone" = "The process had already exited.";
+"action.containerStopped" = "Stopped container %@.";
+"action.containerStopFailed" = "Docker did not stop %@.";
+"action.containerRestarted" = "Restarted container %@.";
+"action.containerRestartFailed" = "Docker did not restart %@.";
 "restartError.unknownCommand" = "The command that started it could not be read.";
 "restartError.stopFailed" = "The running copy could not be stopped, so a second one was not started.";
 "restartError.directoryMissing" = "Its working directory no longer exists: %@";

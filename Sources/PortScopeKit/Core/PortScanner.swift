@@ -51,6 +51,19 @@ public actor PortScanner {
             return identified
         }
 
+        // Published container ports are all held by the engine's forwarder;
+        // the engine API says which container each one belongs to.
+        let containers = DockerEngine.publishedPorts()
+        if !containers.isEmpty {
+            ports = ports.map { info in
+                guard let container = containers[info.port] else { return info }
+                var attributed = info
+                attributed.container = container
+                attributed.service = Self.containerService(container, http: info.service)
+                return attributed
+            }
+        }
+
         let current = Set(ports.map(\.port))
         let snapshot = PortSnapshot(
             ports: ports,
@@ -96,6 +109,29 @@ public actor PortScanner {
             }
         }
         return results
+    }
+
+    /// The service shown for a container's port: the container by name, with
+    /// the image and Compose project as evidence. HTTP evidence already taken
+    /// for the port is kept — "nginx" answering HTTP 200 is still worth saying.
+    static func containerService(_ container: ContainerInfo, http: ServiceInfo?) -> ServiceInfo {
+        var detail = container.image
+        if let project = container.composeProject, let service = container.composeService {
+            detail += " · compose \(project)/\(service)"
+        }
+        let evidence = [Evidence(sourceKey: "evidence.container", detail: detail, weight: 0.99)]
+            + (http?.evidence.filter { $0.sourceKey.hasPrefix("evidence.http") } ?? [])
+        return ServiceInfo(
+            kind: .container,
+            title: container.name,
+            summaryKey: "service.dockerContainer",
+            confidence: 0.99,
+            evidence: evidence,
+            httpStatus: http?.httpStatus,
+            serverHeader: http?.serverHeader,
+            projectPath: nil,
+            projectName: container.composeProject
+        )
     }
 
     /// Re-reads process metadata on the next scan. Used after a restart, when
