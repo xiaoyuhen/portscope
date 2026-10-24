@@ -31,10 +31,21 @@ public struct HTTPProbeResult: Sendable, Hashable {
 public actor HTTPProber {
     private let session: URLSession
     private let timeout: TimeInterval
-    private var cache: [Int: (result: HTTPProbeResult, at: Date)] = [:]
-    /// Services that speak HTTP rarely change their headers, but dev servers do
-    /// restart with new frameworks, so results are re-taken after a minute.
-    private let cacheLifetime: TimeInterval = 60
+    private var cache: [Int: (result: HTTPProbeResult, owner: String, at: Date)] = [:]
+    /// An answer is kept for as long as the same process owns the port.
+    ///
+    /// Probes used to be re-taken every minute, and a probe is a real `GET /`:
+    /// Django, Flask and Rails print every request, so a PortScope left
+    /// running wrote a line into the developer's terminal once a minute, and
+    /// a service with auth logged a failed request just as often. What a
+    /// process serves does not change while it runs — a restart is a new
+    /// process — so one answer per process is enough.
+    ///
+    /// A failed probe is retried after this long instead: a dev server that
+    /// was still compiling its first page when it was asked (Next.js can take
+    /// longer than the timeout) should not be labelled non-HTTP for its whole
+    /// life. Retrying a non-HTTP port costs nobody a log line.
+    private let failureRetry: TimeInterval = 60
 
     public init(timeout: TimeInterval = 1.0) {
         self.timeout = timeout
@@ -61,8 +72,17 @@ public actor HTTPProber {
 
     /// Probe `port` on loopback, unless the port is a database or otherwise
     /// known not to speak HTTP.
-    public func probe(port: Int, host: String = "127.0.0.1", force: Bool = false) async -> HTTPProbeResult? {
-        if !force, let cached = cache[port], Date().timeIntervalSince(cached.at) < cacheLifetime {
+    ///
+    /// - Parameter owner: identifies the process that owns the port (its pid
+    ///   and start time). A cached answer is reused only for the same owner.
+    public func probe(
+        port: Int,
+        host: String = "127.0.0.1",
+        owner: String = "",
+        force: Bool = false
+    ) async -> HTTPProbeResult? {
+        if !force, let cached = cache[port], cached.owner == owner,
+           cached.result.spokeHTTP || Date().timeIntervalSince(cached.at) < failureRetry {
             return cached.result
         }
 
@@ -86,7 +106,7 @@ public actor HTTPProber {
                 bodyPrefix: String(decoding: data.prefix(2048), as: UTF8.self),
                 spokeHTTP: true
             )
-            cache[port] = (result, Date())
+            cache[port] = (result, owner, Date())
             return result
         } catch let error as URLError where error.code == .cannotConnectToHost {
             // Nothing is listening any more; drop any stale entry.
@@ -96,13 +116,19 @@ public actor HTTPProber {
             // The connection was accepted but the exchange failed: not HTTP,
             // or HTTP we could not finish reading. Report it as non-HTTP.
             let result = HTTPProbeResult(status: 0, headers: [:], bodyPrefix: "", spokeHTTP: false)
-            cache[port] = (result, Date())
+            cache[port] = (result, owner, Date())
             return result
         }
     }
 
     public func invalidate(port: Int) {
         cache[port] = nil
+    }
+
+    /// Forgets ports that are no longer listening, so the cache stays the size
+    /// of the machine's port list over a long session.
+    public func retain(ports: Set<Int>) {
+        cache = cache.filter { ports.contains($0.key) }
     }
 }
 

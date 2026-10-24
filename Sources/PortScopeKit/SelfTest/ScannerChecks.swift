@@ -127,5 +127,8 @@ final class LoopbackListener {
         port = Int(UInt16(bigEndian: actual.sin_port))
     }
 
+    /// The listening socket, for a check that wants to accept on it.
+    var descriptor: Int32 { fd }
+
     func close() { _ = Darwin.close(fd) }
 }

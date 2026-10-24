@@ -37,6 +37,7 @@ public actor PortScanner {
                 return identifier.shouldProbe(port: info.port, kind: processMatch?.kind)
             }
             probes = await probeAll(candidates)
+            await prober.retain(ports: Set(ports.map(\.port)))
         }
 
         ports = ports.map { info in
@@ -83,8 +84,10 @@ public actor PortScanner {
             await withTaskGroup(of: (Int, HTTPProbeResult?).self) { group in
                 for info in batch {
                     let host = HTTPProber.loopbackHost(for: info.addresses)
+                    let started = inspector.details(for: info.pid).startedAt?.timeIntervalSince1970 ?? 0
+                    let owner = "\(info.pid):\(started)"
                     group.addTask { [prober] in
-                        (info.port, await prober.probe(port: info.port, host: host))
+                        (info.port, await prober.probe(port: info.port, host: host, owner: owner))
                     }
                 }
                 for await (port, result) in group {
