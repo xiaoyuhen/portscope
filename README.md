@@ -173,6 +173,7 @@ worked around explicitly, and each is documented where it bites:
 | M4 | Stop and restart a service | ✅ |
 | M5 | Menu bar app, language switch, settings | ✅ |
 | M6 | Compatibility matrix, packaging, docs | ✅ |
+| M7 | Menu bar parity, folding rule, default language, UI validation | ✅ |
 
 Each landed as its own pull request; the write-ups are in `docs/milestones/`.
 
