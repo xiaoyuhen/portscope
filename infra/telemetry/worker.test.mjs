@@ -31,6 +31,7 @@ function makeEnv() {
         },
         async put(key, value) { store.set(key, value); },
       },
+      STATS_TOKEN: "test-token",
     },
   };
 }
@@ -48,7 +49,9 @@ const post = (body, path = "/v1/launch") =>
     body: typeof body === "string" ? body : JSON.stringify(body),
   }), env);
 
-const get = (path) => worker.fetch(new Request(`https://x${path}`), env);
+const get = (path, token = "test-token") => worker.fetch(new Request(`https://x${path}`, {
+  headers: token ? { authorization: `Bearer ${token}` } : {},
+}), env);
 const dayKey = () => [...store.keys()].find((k) => k.startsWith("day:"));
 
 // 1. A launch is accepted and counted.
@@ -98,6 +101,18 @@ check("a repeat install counts once", Object.keys(repeat.installs).length, 2);
 // 9. The stats window bounds are clamped rather than trusted.
 const clamped = await (await get("/v1/stats?days=100000")).json();
 check("an absurd window is clamped to 365", clamped.window.days, 365);
+
+// 10. Stats are private: no token, a wrong token, or no secret configured all
+// look like an unknown path.
+check("stats without a token are 404", (await get("/v1/stats", null)).status, 404);
+check("stats with a wrong token are 404", (await get("/v1/stats", "nope")).status, 404);
+check("stats with a token prefix are 404", (await get("/v1/stats", "test")).status, 404);
+check("stats without a configured secret are 404",
+  (await worker.fetch(new Request("https://x/v1/stats", {
+    headers: { authorization: "Bearer " },
+  }), { ...env, STATS_TOKEN: undefined })).status, 404);
+check("authorised stats are not cached",
+  (await get("/v1/stats")).headers.get("cache-control"), "private, no-store");
 
 console.log(failures === 0 ? "\nworker: all checks passed" : `\nworker: ${failures} failed`);
 process.exit(failures === 0 ? 0 : 1);

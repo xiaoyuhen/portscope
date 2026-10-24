@@ -6,7 +6,7 @@ compatibility_date = "2025-01-01"
 # privacy contract and the exact fields that are stored.
 [[kv_namespaces]]
 binding = "PORTSCOPE_TELEMETRY"
-id = "__KV_NAMESPACE_ID__"
+id = "9d601e454bad4aa989d1d3bd7c2acc4f"
 
 # No custom domain: the workers.dev subdomain is enough, and it keeps the app's
 # endpoint stable without owning a domain for this.
