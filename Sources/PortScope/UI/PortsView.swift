@@ -212,7 +212,7 @@ struct FilterPicker: View {
                         Text(locale.t("filter.\(filter.rawValue)"))
                             .font(.system(size: 11, weight: store.filter == filter ? .medium : .regular))
                         if count > 0 {
-                            Text("\(count)")
+                            Text(verbatim: "\(count)")
                                 .font(Theme.monoMicro)
                                 .opacity(0.65)
                         }
@@ -301,13 +301,13 @@ struct PortRow: View {
             }
 
             if let confidence = info.service?.confidence {
-                Text("\(Presentation.confidence(confidence))%")
+                Text(verbatim: "\(Presentation.confidence(confidence))%")
                     .font(Theme.monoMicro)
                     .foregroundStyle(Theme.textTertiary)
                     .frame(width: 28, alignment: .trailing)
             }
 
-            Text(":\(info.port)")
+            Text(verbatim: ":\(info.port)")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
                 .foregroundStyle(Theme.textPrimary)
                 .frame(width: 52, alignment: .trailing)
