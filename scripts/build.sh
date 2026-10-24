@@ -2,12 +2,32 @@
 # Build PortScope.app from the SwiftPM target and ad-hoc sign it.
 #
 # Xcode is not required: the app is a SwiftUI executable wrapped in a bundle
-# by this script. Run `scripts/build.sh --release` for a distributable build.
+# by this script.
+#
+#   scripts/build.sh              # debug, current machine's architecture
+#   scripts/build.sh --release    # optimised, universal (arm64 + x86_64)
+#   scripts/build.sh --release --native   # optimised, this architecture only
+#
+# The release build is universal by default because the README promises Apple
+# silicon and Intel, and a binary that only runs on the machine that built it
+# would make that promise false for half the audience. `--native` exists for
+# iterating: a universal build compiles everything twice.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="debug"
-if [[ "${1:-}" == "--release" ]]; then CONFIG="release"; fi
+ARCH_FLAGS=()
+for argument in "$@"; do
+    case "$argument" in
+        --release) CONFIG="release"; ;;
+        --native) ARCH_FLAGS=(); ;;
+        --universal) ARCH_FLAGS=(--arch arm64 --arch x86_64); ;;
+    esac
+done
+# Universal for release unless --native was passed; debug stays native.
+if [[ "$CONFIG" == "release" && ${#ARCH_FLAGS[@]} -eq 0 && " $* " != *" --native "* ]]; then
+    ARCH_FLAGS=(--arch arm64 --arch x86_64)
+fi
 
 APP_NAME="PortScope"
 DIST="$ROOT/dist"
@@ -15,9 +35,9 @@ APP="$DIST/$APP_NAME.app"
 VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo 0.1.0)"
 BUILD="$(date +%Y%m%d%H%M)"
 
-echo "==> Building ($CONFIG)"
+echo "==> Building ($CONFIG${ARCH_FLAGS:+ universal})"
 cd "$ROOT"
-swift build -c "$CONFIG" --product "$APP_NAME"
+swift build -c "$CONFIG" --product "$APP_NAME" "${ARCH_FLAGS[@]+"${ARCH_FLAGS[@]}"}"
 BIN="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
 
 echo "==> Assembling bundle"
