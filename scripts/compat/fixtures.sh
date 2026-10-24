@@ -40,6 +40,15 @@ for candidate in python3 python3.13 python3.12 python3.11 python3.10 python3.9; 
     if command -v "$candidate" >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
 done
 
+# A `python3` on PATH is not the same as a working one: on macOS it is often a
+# stub that checks for Command Line Tools on first run, which can take longer
+# than the case's startup timeout. Preflight it once, so a machine without a
+# usable interpreter skips the case instead of failing it.
+if [[ -n "$PYTHON" ]] && ! "$PYTHON" -c 'import http.server' >/dev/null 2>&1; then
+    echo "  note: $PYTHON cannot import http.server; skipping the Python case"
+    PYTHON=""
+fi
+
 PASS=0
 FAIL=0
 declare -a FAILURES=()
@@ -175,8 +184,14 @@ run_case() {
     disown "$launcher" 2>/dev/null
 
     if ! wait_for_port "$port" 20; then
-        echo "  FAIL  $name — nothing listened on :$port (see $log)"
-        tail -5 "$log" | sed 's/^/        /'
+        echo "  FAIL  $name — nothing listened on :$port"
+        # Print the whole log, not a tail: a server that failed to start has
+        # usually written one short error, and a tail can miss it entirely.
+        if [[ -s "$log" ]]; then
+            sed 's/^/        | /' "$log"
+        else
+            echo "        | (the server wrote nothing before exiting)"
+        fi
         kill_tree "$launcher"
         (( FAIL++ )); FAILURES+=("$name: did not start")
         return

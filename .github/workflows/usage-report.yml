@@ -20,22 +20,34 @@ jobs:
     name: Snapshot usage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
       - name: Collect
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: a token with push access. The traffic endpoints require
+          # write access, which the default GITHUB_TOKEN does not always carry,
+          # so the traffic numbers are attempted with it and skipped if absent.
+          # Release download counts work with the default token either way.
+          TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
         run: |
           set -euo pipefail
           repo="${GITHUB_REPOSITORY}"
 
-          views=$(gh api "repos/${repo}/traffic/views" --jq '[.views[] | .uniques] | add // 0')
-          clones=$(gh api "repos/${repo}/traffic/clones" --jq '[.clones[] | .uniques] | add // 0')
-
-          # Download counts across every release, per asset.
+          # Download counts: cumulative, and available to any read token.
           downloads=$(gh api "repos/${repo}/releases" --paginate \
-            --jq '[.[].assets[] | {name: .name, downloads: .download_count}] | flatten | .[] | "\(.name): \(.downloads)"' \
+            --jq '[.[].assets[] | "\(.name): \(.download_count)"] | .[]' \
             2>/dev/null || echo "no releases yet")
+
+          # Traffic: 14-day window, requires write access.
+          views="unavailable"
+          clones="unavailable"
+          if [[ -n "${TRAFFIC_TOKEN}" ]]; then
+            v=$(GH_TOKEN="$TRAFFIC_TOKEN" gh api "repos/${repo}/traffic/views" \
+                --jq '[.views[] | .uniques] | add // 0' 2>/dev/null || echo "unavailable")
+            c=$(GH_TOKEN="$TRAFFIC_TOKEN" gh api "repos/${repo}/traffic/clones" \
+                --jq '[.clones[] | .uniques] | add // 0' 2>/dev/null || echo "unavailable")
+            views="$v"
+            clones="$c"
+          fi
 
           {
             echo "## Usage snapshot — $(date -u +%Y-%m-%d)"
@@ -50,6 +62,11 @@ jobs:
             echo "${downloads}"
             echo '```'
             echo
+            if [[ "${views}" == "unavailable" ]]; then
+              echo "_Traffic needs a \`TRAFFIC_TOKEN\` secret with write access;"
+              echo "download counts above need nothing._"
+            fi
+            echo
             echo "_Aggregate counts only. GitHub retains traffic for 14 days._"
           } > report.md
 
@@ -60,16 +77,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          # One rolling issue rather than a new issue every month: the point is
-          # a trend, and 12 issues a year is noise.
+          # One rolling issue rather than a new one every month: the point is a
+          # trend, and 12 issues a year is noise.
           title="Usage"
-          existing=$(gh issue list --search "in:title \"${title}\"" --state open \
-            --json number,title --jq '.[] | select(.title=="'"${title}"'") | .number' | head -1)
+          existing=$(gh issue list --state open --json number,title \
+            --jq ".[] | select(.title == \"${title}\") | .number" | head -1)
 
           if [[ -n "$existing" ]]; then
             gh issue comment "$existing" --body-file report.md
           else
-            gh issue create --title "$title" --body-file report.md \
-              --label "metrics" 2>/dev/null || \
             gh issue create --title "$title" --body-file report.md
           fi

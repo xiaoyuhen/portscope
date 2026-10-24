@@ -27,11 +27,18 @@ jobs:
           set -euo pipefail
           if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
             version="${GITHUB_REF_NAME#v}"
+            # The tag must match VERSION in the source. Without this check the
+            # published app could report a different version than the release
+            # page, and telemetry would attribute launches to the wrong one.
+            declared="$(cat VERSION)"
+            if [[ "$version" != "$declared" ]]; then
+              echo "::error::tag is v${version} but VERSION says ${declared}"
+              exit 1
+            fi
           else
             version="${{ inputs.version }}"
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "$version" > VERSION
           echo "Building $version"
 
       - name: Test before publishing
