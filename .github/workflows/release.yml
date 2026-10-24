@@ -53,6 +53,18 @@ jobs:
           PORTSCOPE_TELEMETRY_URL: ${{ vars.PORTSCOPE_TELEMETRY_URL }}
         run: ./scripts/package.sh
 
+      - name: Run the Intel slice
+        # The runner is Apple silicon, so the x86_64 half of the universal
+        # binary is otherwise only ever compiled, never run. Rosetta runs it.
+        run: |
+          set -euo pipefail
+          BIN=dist/PortScope.app/Contents/MacOS/PortScope
+          lipo "$BIN" -verify_arch x86_64 arm64
+          if ! arch -x86_64 /usr/bin/true 2>/dev/null; then
+            softwareupdate --install-rosetta --agree-to-license
+          fi
+          arch -x86_64 "$BIN" --selftest
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
