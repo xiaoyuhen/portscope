@@ -1,0 +1,14 @@
+name = "portscope-telemetry"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# One KV namespace holds a small JSON summary per day. See worker.js for the
+# privacy contract and the exact fields that are stored.
+[[kv_namespaces]]
+binding = "PORTSCOPE_TELEMETRY"
+id = "__KV_NAMESPACE_ID__"
+
+# No custom domain: the workers.dev subdomain is enough, and it keeps the app's
+# endpoint stable without owning a domain for this.
+[observability]
+enabled = true

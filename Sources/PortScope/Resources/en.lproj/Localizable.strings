@@ -190,6 +190,8 @@
 "settings.seconds" = "%ds";
 "settings.languageTitle" = "Language";
 "settings.languageSubtitle" = "Applies immediately, no relaunch needed.";
+"settings.telemetryTitle" = "Anonymous launch count";
+"settings.telemetrySubtitle" = "Sends the app version and a random install ID, once a day. Never what is listening on your ports.";
 "settings.hiddenTitle" = "Hidden ports";
 "settings.hiddenSubtitle" = "Ports you hid from the list. They are still monitored.";
 "settings.unhideAll" = "Show all";

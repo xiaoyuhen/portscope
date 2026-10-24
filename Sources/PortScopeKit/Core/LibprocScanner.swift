@@ -115,6 +115,6 @@ public enum LibprocScanner {
         guard inet_ntop(AF_INET6, &addr, &buffer, socklen_t(INET6_ADDRSTRLEN)) != nil else {
             return "::"
         }
-        return String(cString: buffer)
+        return String(decoding: buffer.prefix { $0 != 0 }.map(UInt8.init(bitPattern:)), as: UTF8.self)
     }
 }

@@ -75,6 +75,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // so the first launch opens it once. Afterwards the app is a menu bar
         // citizen and the window appears only when asked for.
         window.show()
+
+        // Anonymous launch counting: one event, once a day, version only.
+        // Never blocks launch, never fails loudly. See Telemetry.swift for the
+        // exact payload and how to opt out.
+        Telemetry.recordLaunch(version: Self.version)
+    }
+
+    static var version: String {
+        (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String)
+            ?? "0.0.0"
     }
 
     /// Clicking the Dock icon is the other way back to the window, and with an

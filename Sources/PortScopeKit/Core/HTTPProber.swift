@@ -21,7 +21,7 @@ public struct HTTPProbeResult: Sendable, Hashable {
 ///   address, even when the service is bound to one.
 /// * It sends a plain `GET /` with a fixed User-Agent and reads at most a few
 ///   kilobytes, so it cannot be used to make a local service do real work.
-/// * Timeouts are short. A port that does not answer in 1.5s is simply not
+/// * Timeouts are short. A port that does not answer in 1s is simply not
 ///   probed again until the next refresh.
 ///
 /// Some services (SSH, Redis, Postgres) will accept the connection and then
@@ -35,7 +35,7 @@ public actor HTTPProber {
     /// restart with new frameworks, so results are re-taken after a minute.
     private let cacheLifetime: TimeInterval = 60
 
-    public init(timeout: TimeInterval = 1.5) {
+    public init(timeout: TimeInterval = 1.0) {
         self.timeout = timeout
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = timeout

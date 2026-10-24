@@ -174,8 +174,6 @@ public struct ServiceIdentifier: Sendable {
         var directory = cwd
         var depth = 0
         while depth < 6 {
-            let candidate = (directory as NSString).appendingPathComponent("package.json")
-            _ = candidate
             for manifest in manifests {
                 let file = (directory as NSString).appendingPathComponent(manifest)
                 if FileManager.default.fileExists(atPath: file) {

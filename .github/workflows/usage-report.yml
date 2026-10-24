@@ -1,0 +1,90 @@
+name: Usage report
+
+# GitHub keeps repository traffic for 14 days only, so a monthly snapshot is
+# the only way to see a trend. Release download counts are cumulative and need
+# no schedule, but they are printed here too for one place to look.
+#
+# Every number here is aggregate. Nothing identifies a person.
+on:
+  schedule:
+    # 06:00 UTC on the first of the month.
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    name: Snapshot usage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Optional: a token with push access. The traffic endpoints require
+          # write access, which the default GITHUB_TOKEN does not always carry,
+          # so the traffic numbers are attempted with it and skipped if absent.
+          # Release download counts work with the default token either way.
+          TRAFFIC_TOKEN: ${{ secrets.TRAFFIC_TOKEN }}
+        run: |
+          set -euo pipefail
+          repo="${GITHUB_REPOSITORY}"
+
+          # Download counts: cumulative, and available to any read token.
+          downloads=$(gh api "repos/${repo}/releases" --paginate \
+            --jq '[.[].assets[] | "\(.name): \(.download_count)"] | .[]' \
+            2>/dev/null || echo "no releases yet")
+
+          # Traffic: 14-day window, requires write access.
+          views="unavailable"
+          clones="unavailable"
+          if [[ -n "${TRAFFIC_TOKEN}" ]]; then
+            v=$(GH_TOKEN="$TRAFFIC_TOKEN" gh api "repos/${repo}/traffic/views" \
+                --jq '[.views[] | .uniques] | add // 0' 2>/dev/null || echo "unavailable")
+            c=$(GH_TOKEN="$TRAFFIC_TOKEN" gh api "repos/${repo}/traffic/clones" \
+                --jq '[.clones[] | .uniques] | add // 0' 2>/dev/null || echo "unavailable")
+            views="$v"
+            clones="$c"
+          fi
+
+          {
+            echo "## Usage snapshot — $(date -u +%Y-%m-%d)"
+            echo
+            echo "| Signal | Value | Window |"
+            echo "|---|---|---|"
+            echo "| Unique visitors | ${views} | last 14 days |"
+            echo "| Unique cloners | ${clones} | last 14 days |"
+            echo
+            echo "### Release downloads (cumulative)"
+            echo '```'
+            echo "${downloads}"
+            echo '```'
+            echo
+            if [[ "${views}" == "unavailable" ]]; then
+              echo "_Traffic needs a \`TRAFFIC_TOKEN\` secret with write access;"
+              echo "download counts above need nothing._"
+            fi
+            echo
+            echo "_Aggregate counts only. GitHub retains traffic for 14 days._"
+          } > report.md
+
+          cat report.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # One rolling issue rather than a new one every month: the point is a
+          # trend, and 12 issues a year is noise.
+          title="Usage"
+          existing=$(gh issue list --state open --json number,title \
+            --jq ".[] | select(.title == \"${title}\") | .number" | head -1)
+
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md
+          fi
