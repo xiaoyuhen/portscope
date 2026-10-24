@@ -28,8 +28,14 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Public summary: aggregate counts only, no per-install data.
+    // Aggregate counts only, no per-install data — and still only for the
+    // maintainer. A worker with no STATS_TOKEN secret has no readable stats at
+    // all, and a wrong token gets the same 404 as an unknown path, so the
+    // endpoint's existence is not advertised either.
     if (url.pathname === "/v1/stats" && request.method === "GET") {
+      if (!(await authorised(request, env))) {
+        return new Response("not found", { status: 404 });
+      }
       const days = Number(url.searchParams.get("days") || 30);
       return json(await summary(env, Math.min(Math.max(days, 1), 365)));
     }
@@ -99,6 +105,24 @@ export default {
   },
 };
 
+/**
+ * True when the request carries `Authorization: Bearer <STATS_TOKEN>`.
+ * Both sides are hashed before comparing so the comparison takes the same time
+ * whatever the token's length or how much of it matches.
+ */
+async function authorised(request, env) {
+  const expected = env.STATS_TOKEN;
+  if (!expected) return false;
+  const header = request.headers.get("authorization") || "";
+  const presented = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const digest = async (value) =>
+    new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)));
+  const [a, b] = await Promise.all([digest(presented), digest(expected)]);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
 async function summary(env, days) {
   const now = Date.now();
   const totals = { launches: 0, installs: 0, versions: {}, platforms: {} };
@@ -126,8 +150,8 @@ function json(value) {
   return new Response(JSON.stringify(value, null, 2), {
     headers: {
       "content-type": "application/json",
-      // Counts are public; caching keeps a popular stats page off the worker.
-      "cache-control": "public, max-age=300",
+      // Authorised responses must never land in a shared cache.
+      "cache-control": "private, no-store",
     },
   });
 }

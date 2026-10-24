@@ -42,10 +42,21 @@ wrangler login
 
 cd infra/telemetry
 wrangler kv namespace create PORTSCOPE_TELEMETRY
-# Copy the printed id into wrangler.toml, replacing __KV_NAMESPACE_ID__.
+# Copy the printed id into wrangler.toml (a fork replaces the one committed here).
 
 wrangler deploy
+# A new account must register a workers.dev subdomain first; the TLS
+# certificate for it can take a few minutes to be issued after that.
+
+# The stats endpoint is private. Without this secret it answers 404 to everyone.
+# The token is kept in the login Keychain, not in a file.
+token=$(openssl rand -hex 32)
+security add-generic-password -U -a portscope -s portscope-stats-token -w "$token"
+printf '%s' "$token" | wrangler secret put STATS_TOKEN
 ```
+
+The deployed receiver for this repository is
+`https://portscope-telemetry.xiaoyuhen.workers.dev`.
 
 `wrangler deploy` prints the worker's URL. Point the app at it:
 
@@ -59,8 +70,12 @@ The URL is baked into `Info.plist` at build time by `scripts/build.sh`; leaving
 
 ## Reading the numbers
 
+Stats need the `STATS_TOKEN` secret as a bearer token. A missing or wrong
+token gets the same 404 as an unknown path, so the endpoint is not advertised.
+
 ```bash
-curl https://portscope-telemetry.<account>.workers.dev/v1/stats?days=30
+curl -H "Authorization: Bearer $(security find-generic-password -s portscope-stats-token -w)" \
+  "https://portscope-telemetry.xiaoyuhen.workers.dev/v1/stats?days=30"
 ```
 
 ```json
@@ -105,5 +120,6 @@ wrangler dev --local
 curl -X POST http://localhost:8787/v1/launch \
   -H 'content-type: application/json' \
   -d '{"event":"launch","app":"PortScope","version":"0.2.0","os":"14.5","arch":"arm64","id":"test-1"}'
-curl http://localhost:8787/v1/stats?days=1
+# With STATS_TOKEN=dev in .dev.vars:
+curl -H 'Authorization: Bearer dev' http://localhost:8787/v1/stats?days=1
 ```
