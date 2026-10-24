@@ -28,8 +28,9 @@ import PortScopeKit
 /// * The receiver stores a coarse daily count, not a per-request log.
 ///
 /// **Opting out:** `defaults write com.portscope.app PortScope.telemetry -bool NO`,
-/// the toggle in Settings, or build with `PORTSCOPE_NO_TELEMETRY=1` to compile
-/// it out entirely. `--selftest` and every other headless command never send
+/// the toggle in Settings, or launch with `PORTSCOPE_NO_TELEMETRY=1` in the
+/// environment. A build with no `PORTSCOPE_TELEMETRY_URL` has no endpoint and
+/// never sends anything. `--selftest` and every other headless command never send
 /// anything.
 ///
 /// Failures are silent by design: telemetry must never affect the app.
@@ -79,10 +80,15 @@ public enum Telemetry {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = payload(version: version)
 
-        URLSession.shared.dataTask(with: request) { _, _, _ in
-            // Only remember the send if it actually left. A machine that is
-            // offline should not burn its one attempt for the day.
-            defaults.set(stamp, forKey: lastSentKey)
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            // Only remember the send if the receiver accepted it. A machine
+            // that is offline, or a receiver that is down, should not burn the
+            // one attempt for the day. `UserDefaults.standard` is re-read here
+            // rather than captured: it is thread-safe but not `Sendable`.
+            let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+            if error == nil, (200..<300).contains(status) {
+                UserDefaults.standard.set(stamp, forKey: lastSentKey)
+            }
             completion()
         }.resume()
     }
