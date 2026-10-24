@@ -242,6 +242,10 @@ struct OverviewView: View {
 struct SettingsView: View {
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
+    @StateObject private var loginItem = LoginItem()
+    /// Mirrors the telemetry preference so the switch redraws when flipped:
+    /// a binding straight to `UserDefaults` changes the value but not the view.
+    @StateObject private var telemetryOn = LocalFlag(Telemetry.isEnabled)
 
     private let intervals: [TimeInterval] = [1, 2, 5, 10, 30]
 
@@ -308,6 +312,37 @@ struct SettingsView: View {
 
                         Hairline()
 
+                        row(
+                            title: locale.t("settings.loginTitle"),
+                            subtitle: loginSubtitle
+                        ) {
+                            HStack(spacing: 8) {
+                                if loginItem.state == .needsApproval {
+                                    Button(locale.t("settings.loginOpenSettings")) {
+                                        loginItem.openSystemSettings()
+                                    }
+                                    .buttonStyle(.plain)
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Theme.accent)
+                                }
+                                Toggle("", isOn: Binding(
+                                    get: { loginItem.isOn },
+                                    set: { loginItem.set($0) }
+                                ))
+                                .labelsHidden()
+                                .toggleStyle(.switch)
+                                .controlSize(.small)
+                                .accessibilityLabel(locale.t("settings.loginTitle"))
+                            }
+                        }
+                        // The item can be removed in System Settings while
+                        // PortScope runs; re-read it whenever the app returns.
+                        .onReceive(NotificationCenter.default.publisher(
+                            for: NSApplication.didBecomeActiveNotification
+                        )) { _ in loginItem.refresh() }
+
+                        Hairline()
+
                         // Telemetry is a switch in the place people look for
                         // settings, not a line in a document. It is on by
                         // default; turning it off takes effect immediately and
@@ -317,8 +352,8 @@ struct SettingsView: View {
                             subtitle: locale.t("settings.telemetrySubtitle")
                         ) {
                             Toggle("", isOn: Binding(
-                                get: { Telemetry.isEnabled },
-                                set: { Telemetry.setEnabled($0) }
+                                get: { telemetryOn.value },
+                                set: { Telemetry.setEnabled($0); telemetryOn.value = $0 }
                             ))
                             .labelsHidden()
                             .toggleStyle(.switch)
@@ -361,6 +396,12 @@ struct SettingsView: View {
             }
             .padding(Theme.gutter)
         }
+    }
+
+    private var loginSubtitle: String {
+        if let failure = loginItem.failure { return locale.t("settings.loginFailed", failure) }
+        if loginItem.state == .needsApproval { return locale.t("settings.loginApproval") }
+        return locale.t("settings.loginSubtitle")
     }
 
     private func row<Accessory: View>(

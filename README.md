@@ -67,6 +67,7 @@ PortScope answers those questions at a glance, and shows its reasoning.
   [Safety](#safety) for exactly what it will and will not touch.
 - **A menu bar count.** Closing the window leaves PortScope running in the menu
   bar with a live port count; the panel lists the same rows as the window.
+  **Open at login** is one switch in Settings.
 - **English and 简体中文**, switchable at runtime. English is the default for
   everyone, whatever the system language is; 简体中文 applies once it is chosen
   in Settings.

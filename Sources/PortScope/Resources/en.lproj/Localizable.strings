@@ -190,13 +190,18 @@
 "settings.seconds" = "%ds";
 "settings.languageTitle" = "Language";
 "settings.languageSubtitle" = "Applies immediately, no relaunch needed.";
+"settings.loginTitle" = "Open at login";
+"settings.loginSubtitle" = "Start PortScope in the menu bar when you log in.";
+"settings.loginApproval" = "Waiting for you to allow it in System Settings → General → Login Items.";
+"settings.loginOpenSettings" = "Open Settings";
+"settings.loginFailed" = "macOS did not allow it: %@";
 "settings.telemetryTitle" = "Anonymous launch count";
 "settings.telemetrySubtitle" = "Sends the app version and a random install ID, once a day. Never what is listening on your ports.";
 "settings.hiddenTitle" = "Hidden ports";
 "settings.hiddenSubtitle" = "Ports you hid from the list. They are still monitored.";
 "settings.unhideAll" = "Show all";
 "settings.about" = "About";
-"settings.aboutBody" = "PortScope reads listening sockets through libproc, the same kernel interface as lsof, and identifies services from process metadata and HTTP headers. Everything stays on this machine.";
+"settings.aboutBody" = "PortScope reads listening sockets through libproc, the same kernel interface as lsof, and identifies services from process metadata and HTTP headers. Apart from the anonymous launch count, nothing leaves this machine.";
 
 /* MARK: - Activity */
 "overview.activity" = "Activity";

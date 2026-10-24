@@ -190,13 +190,18 @@
 "settings.seconds" = "%d 秒";
 "settings.languageTitle" = "语言";
 "settings.languageSubtitle" = "立即生效，无需重启。";
+"settings.loginTitle" = "登录时打开";
+"settings.loginSubtitle" = "登录 Mac 时在菜单栏启动 PortScope。";
+"settings.loginApproval" = "等待你在「系统设置 → 通用 → 登录项」中允许。";
+"settings.loginOpenSettings" = "打开设置";
+"settings.loginFailed" = "macOS 未允许：%@";
 "settings.telemetryTitle" = "匿名启动统计";
 "settings.telemetrySubtitle" = "每天最多发送一次应用版本和一个随机安装 ID。绝不发送你的端口内容。";
 "settings.hiddenTitle" = "已隐藏的端口";
 "settings.hiddenSubtitle" = "这些端口已从列表中隐藏，但仍会被监控。";
 "settings.unhideAll" = "全部显示";
 "settings.about" = "关于";
-"settings.aboutBody" = "PortScope 通过 libproc（与 lsof 相同的内核接口）读取监听中的套接字，并依据进程信息和 HTTP 响应头识别服务。所有数据都只留在本机。";
+"settings.aboutBody" = "PortScope 通过 libproc（与 lsof 相同的内核接口）读取监听中的套接字，并依据进程信息和 HTTP 响应头识别服务。除匿名启动计数外，任何数据都不会离开本机。";
 
 /* MARK: - 活动记录 */
 "overview.activity" = "变化记录";
