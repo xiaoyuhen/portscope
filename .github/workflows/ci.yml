@@ -29,7 +29,7 @@ jobs:
     # depend on the runner image.
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Show toolchain
         run: |
@@ -83,13 +83,13 @@ jobs:
     if: github.event_name != 'pull_request'
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build and zip
         run: ./scripts/package.sh
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: PortScope-${{ github.sha }}
           path: |
@@ -102,7 +102,7 @@ jobs:
     name: Lint scripts and plist
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Shell scripts parse
         run: |
