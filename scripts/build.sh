@@ -38,7 +38,11 @@ BUILD="$(date +%Y%m%d%H%M)"
 echo "==> Building ($CONFIG${ARCH_FLAGS:+ universal})"
 cd "$ROOT"
 swift build -c "$CONFIG" --product "$APP_NAME" "${ARCH_FLAGS[@]+"${ARCH_FLAGS[@]}"}"
-BIN="$(swift build -c "$CONFIG" --show-bin-path)/$APP_NAME"
+# The architecture flags must be repeated here: a universal build lands in a
+# different directory (`.build/apple/Products/…`) from a native one, and asking
+# for the bin path without them names the native directory, which a clean
+# universal build never creates.
+BIN="$(swift build -c "$CONFIG" --show-bin-path "${ARCH_FLAGS[@]+"${ARCH_FLAGS[@]}"}")/$APP_NAME"
 
 echo "==> Assembling bundle"
 rm -rf "$APP"
