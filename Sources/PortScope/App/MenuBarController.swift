@@ -56,6 +56,19 @@ final class MenuBarController {
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.updateLabel() }
             .store(in: &cancellables)
+        // Stop and restart are confirmed in the main window, the only surface
+        // with room for the dialog. Asked for from the panel while the window
+        // was hidden, the request sat there invisibly and the buttons appeared
+        // to do nothing, so a pending action brings the window forward.
+        store.$pendingAction
+            .compactMap { $0 }
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self, self.panel?.isVisible == true else { return }
+                self.closePanel()
+                self.openWindow()
+            }
+            .store(in: &cancellables)
     }
 
     /// The menu bar mark, loaded from the bundle.
@@ -223,7 +236,6 @@ struct MenuBarPanel: View {
             header
             Hairline()
             list
-                .frame(height: 460 - 38 - 36 - 2)
             Hairline()
             footer
         }
@@ -252,7 +264,7 @@ struct MenuBarPanel: View {
             }
         }
         .padding(.horizontal, 14)
-        .frame(height: 38)
+        .frame(height: Self.headerHeight)
     }
 
     private var list: some View {
@@ -293,7 +305,7 @@ struct MenuBarPanel: View {
                 .foregroundStyle(Theme.textTertiary)
         }
         .padding(.horizontal, 14)
-        .frame(height: 36)
+        .frame(height: Self.footerHeight)
         .background(Theme.surface)
     }
 }

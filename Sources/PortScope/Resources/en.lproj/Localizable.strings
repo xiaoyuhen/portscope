@@ -230,6 +230,11 @@
 "action.refusedOwnProcess" = "Not stopped: PortScope will not signal itself.";
 "action.refusedSystem" = "Not stopped: this is a system process.";
 "action.processGone" = "The process had already exited.";
+"restartError.unknownCommand" = "The command that started it could not be read.";
+"restartError.stopFailed" = "The running copy could not be stopped, so a second one was not started.";
+"restartError.directoryMissing" = "Its working directory no longer exists: %@";
+"restartError.spawnFailed" = "It could not be started: %@";
+"restartError.portDidNotComeBack" = "Port %d did not come back within 20 seconds. Output is in ~/Library/Logs/PortScope/.";
 
 /* MARK: - Menu bar */
 "menubar.tooltip" = "%d ports listening";

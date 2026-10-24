@@ -47,23 +47,25 @@ public actor ProcessController {
     // MARK: - Stopping
 
     /// Stops `pid` and all of its descendants.
+    ///
+    /// A refused root stops *nothing*. The descendants are only taken because
+    /// they belong to the service being stopped; when the root is not ours to
+    /// stop, its descendants are someone else's business too. Walking them
+    /// anyway is not a theoretical risk: launchd (PID 1) holds the listening
+    /// sockets of socket-activated services, and every process in the login
+    /// session descends from it, so stopping such a row would have signalled
+    /// the whole session.
     public func stop(pid: pid_t) async -> StopOutcome {
-        let targets = [pid] + descendants(of: pid)
-        var outcome = StopOutcome(terminated: [], forceKilled: [], refused: [:], success: true)
-
-        var permitted: [pid_t] = []
-        for target in targets {
-            if let refusal = refusalReason(for: target) {
-                outcome.refused[target] = refusal
-                continue
-            }
-            permitted.append(target)
-        }
-
-        guard !permitted.isEmpty else {
-            outcome.success = false
+        var outcome = StopOutcome(terminated: [], forceKilled: [], refused: [:], success: false)
+        if let refusal = refusalReason(for: pid) {
+            outcome.refused[pid] = refusal
             return outcome
         }
+
+        let plan = Self.stopPlan(root: pid, children: childrenByParent(), refusal: refusalReason)
+        outcome.refused = plan.refused
+        let permitted = plan.permitted
+        guard !permitted.isEmpty else { return outcome }
 
         // Children first: stopping the parent first can orphan them before we
         // get to them.
@@ -96,6 +98,10 @@ public actor ProcessController {
     public enum RestartError: Error, Sendable {
         /// We know the pid but not enough about it to re-run it.
         case unknownCommand
+        /// The old process could not be stopped, so starting a second copy
+        /// would either fail on "address in use" or, worse, look like success
+        /// because the old one is still holding the port.
+        case stopFailed(ProcessControlRefusal?)
         case directoryMissing(String)
         case spawnFailed(String)
         case portDidNotComeBack(Int)
@@ -124,7 +130,12 @@ public actor ProcessController {
             }
         }
 
-        _ = await stop(pid: info.pid)
+        let stopped = await stop(pid: info.pid)
+        // A service that already exited has nothing to stop; starting it again
+        // is exactly what was asked for.
+        if !stopped.success, stopped.refused[info.pid] != .processGone {
+            throw RestartError.stopFailed(stopped.refused.values.first)
+        }
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/bin/zsh")
@@ -136,10 +147,14 @@ public actor ProcessController {
         process.standardInput = FileHandle.nullDevice
         let logURL = try logFile(for: info.port)
         FileManager.default.createFile(atPath: logURL.path, contents: nil)
-        if let handle = try? FileHandle(forWritingTo: logURL) {
+        let handle = try? FileHandle(forWritingTo: logURL)
+        if let handle {
             process.standardOutput = handle
             process.standardError = handle
         }
+        // The child has its own copy of the descriptor once it is running;
+        // PortScope's copy would otherwise leak one fd per restart.
+        defer { try? handle?.close() }
 
         do {
             try process.run()
@@ -209,8 +224,43 @@ public actor ProcessController {
         kill(pid, 0) == 0 || errno == EPERM
     }
 
+    /// The processes a stop of `root` may signal, breadth-first, root first.
+    ///
+    /// A refused process is recorded and its subtree is not entered: a process
+    /// we may not signal is a boundary, and whatever runs under it belongs to
+    /// it rather than to the service being stopped. Pure, so the rule is
+    /// checked without signalling anything.
+    static func stopPlan(
+        root: pid_t,
+        children: [pid_t: [pid_t]],
+        refusal: (pid_t) -> ProcessControlRefusal?
+    ) -> (permitted: [pid_t], refused: [pid_t: ProcessControlRefusal]) {
+        var permitted: [pid_t] = []
+        var refused: [pid_t: ProcessControlRefusal] = [:]
+        var seen: Set<pid_t> = []
+        var queue = [root]
+        while !queue.isEmpty {
+            let next = queue.removeFirst()
+            // Guard against a pathological cycle rather than looping forever.
+            guard seen.insert(next).inserted else { continue }
+            if let reason = refusal(next) {
+                refused[next] = reason
+                continue
+            }
+            permitted.append(next)
+            queue.append(contentsOf: children[next] ?? [])
+        }
+        return (permitted, refused)
+    }
+
     /// All descendants of `pid`, breadth-first.
     public nonisolated func descendants(of pid: pid_t) -> [pid_t] {
+        Self.stopPlan(root: pid, children: childrenByParent(), refusal: { _ in nil })
+            .permitted.dropFirst().map { $0 }
+    }
+
+    /// Every live process, keyed by its parent.
+    nonisolated func childrenByParent() -> [pid_t: [pid_t]] {
         var childrenByParent: [pid_t: [pid_t]] = [:]
         for candidate in LibprocScanner.allPids() {
             var info = proc_bsdinfo()
@@ -222,16 +272,6 @@ public actor ProcessController {
             guard parent != candidate else { continue }
             childrenByParent[parent, default: []].append(candidate)
         }
-
-        var result: [pid_t] = []
-        var queue = childrenByParent[pid] ?? []
-        while !queue.isEmpty {
-            let next = queue.removeFirst()
-            // Guard against a pathological cycle rather than looping forever.
-            guard !result.contains(next) else { continue }
-            result.append(next)
-            queue.append(contentsOf: childrenByParent[next] ?? [])
-        }
-        return result
+        return childrenByParent
     }
 }
