@@ -77,6 +77,10 @@ enum IdentifierChecks {
                 ))
                 try expect(info.projectPath == nil, "expected no project, got \(info.projectPath ?? "nil")")
             }),
+            ("the home folder is not a project", {
+                let info = identify(process("limactl", ["limactl", "hostagent"], port: 61071, cwd: NSHomeDirectory()))
+                try expect(info.projectName == nil, "expected no project, got \(info.projectName ?? "nil")")
+            }),
             ("databases are never HTTP-probed", {
                 let identifier = ServiceIdentifier()
                 try expect(!identifier.shouldProbe(port: 6379, kind: .cache), "cache probed")

@@ -79,6 +79,11 @@ struct PortsView: View {
             )
             .contentShape(Rectangle())
             .onTapGesture { selection.value = info.port }
+            // The tap gesture is invisible to VoiceOver; the row is a
+            // selectable element with its buttons kept inside it.
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(selection.value == info.port ? [.isButton, .isSelected] : .isButton)
+            .accessibilityAction { selection.value = info.port }
             .contextMenu { rowMenu(for: info) }
             Hairline(inset: 14)
         }
@@ -136,7 +141,7 @@ struct PortsView: View {
                 NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: cwd)
             }
         }
-        .disabled(info.workingDirectory == nil)
+        .disabled(info.workingDirectory == nil || info.container != nil)
     }
 
     // MARK: - Empty and footer

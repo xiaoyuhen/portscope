@@ -191,7 +191,10 @@ public struct ServiceIdentifier: Sendable {
         let name = (cwd as NSString).lastPathComponent
         let systemRoots = ["/Library", "/System", "/private/var", "/Users/Shared"]
         let isSystemPath = systemRoots.contains { cwd.hasPrefix($0) }
-        if isSystemPath || name == "Data" || name.isEmpty { return nil }
+        // The home folder is where launchd and many helpers start; its name
+        // is the user's, not a project's.
+        let isHome = (cwd as NSString).standardizingPath == (NSHomeDirectory() as NSString).standardizingPath
+        if isSystemPath || isHome || name == "Data" || name.isEmpty { return nil }
         return (cwd, name)
     }
 }

@@ -21,7 +21,10 @@ struct InspectorView: View {
                 summarySection
                 evidenceSection
                 detailsSection
-                if let cwd = info.workingDirectory {
+                // A container's listener is the engine's port forwarder; its
+                // working directory and uptime are the forwarder's, not the
+                // container's.
+                if info.container == nil, let cwd = info.workingDirectory {
                     projectSection(cwd)
                 }
             }
@@ -85,7 +88,7 @@ struct InspectorView: View {
                 if let kind = info.service?.kind {
                     badge(locale.t("kind.\(kind.rawValue)"), color: Theme.tint(for: kind))
                 }
-                if let uptime = info.uptime {
+                if info.container == nil, let uptime = info.uptime {
                     badge(locale.t("inspector.uptime", Presentation.uptime(uptime)),
                           color: Theme.textSecondary)
                 }

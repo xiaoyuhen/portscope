@@ -122,7 +122,7 @@ public actor PortScanner {
         let evidence = [Evidence(sourceKey: "evidence.container", detail: detail, weight: 0.99)]
             + (http?.evidence.filter { $0.sourceKey.hasPrefix("evidence.http") } ?? [])
         return ServiceInfo(
-            kind: .container,
+            kind: containerKind(image: container.image),
             title: container.name,
             summaryKey: "service.dockerContainer",
             confidence: 0.99,
@@ -132,6 +132,29 @@ public actor PortScanner {
             projectPath: nil,
             projectName: container.composeProject
         )
+    }
+
+    /// Images whose name says what they serve. A container running one of
+    /// these is a data store first, so it counts and filters with the
+    /// databases and caches that run on the host.
+    static let dataImages: [String: ServiceInfo.Kind] = [
+        "postgres": .database, "postgis": .database, "mysql": .database, "mariadb": .database,
+        "mongo": .database, "clickhouse-server": .database, "influxdb": .database,
+        "elasticsearch": .database, "opensearch": .database, "qdrant": .database,
+        "redis": .cache, "redis-stack-server": .cache, "valkey": .cache, "memcached": .cache,
+    ]
+
+    /// The kind for a container, from its image's repository name:
+    /// `postgres:16`, `docker.io/library/redis@sha256:…` and
+    /// `localhost:5000/team/mysql:8` are read as postgres, redis and mysql.
+    static func containerKind(image: String) -> ServiceInfo.Kind {
+        var reference = image.split(separator: "@", maxSplits: 1).first.map(String.init) ?? image
+        let lastSlash = reference.lastIndex(of: "/")
+        if let colon = reference.lastIndex(of: ":"), lastSlash.map({ colon > $0 }) ?? true {
+            reference = String(reference[..<colon])
+        }
+        let name = reference.split(separator: "/").last.map { $0.lowercased() } ?? ""
+        return dataImages[name] ?? .container
     }
 
     /// Re-reads process metadata on the next scan. Used after a restart, when
