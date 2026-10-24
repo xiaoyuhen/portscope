@@ -18,7 +18,8 @@ public struct HTTPProbeResult: Sendable, Hashable {
 /// The probe is deliberately minimal and local-only:
 ///
 /// * It only ever connects to a loopback address, never to a LAN interface
-///   address, even when the service is bound to one.
+///   address, even when the service is bound to one — and it never follows a
+///   redirect, which would let a local service send it to any host at all.
 /// * It sends a plain `GET /` with a fixed User-Agent and reads at most a few
 ///   kilobytes, so it cannot be used to make a local service do real work.
 /// * Timeouts are short. A port that does not answer in 1s is simply not
@@ -44,20 +45,32 @@ public actor HTTPProber {
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         // Loopback only: never route a probe through a configured proxy.
         config.connectionProxyDictionary = [:]
-        session = URLSession(configuration: config)
+        session = URLSession(configuration: config, delegate: NoRedirects(), delegateQueue: nil)
     }
 
-    /// Probe `port` on 127.0.0.1, unless the port is a database or otherwise
+    /// The loopback address to probe a service bound to `addresses` on.
+    ///
+    /// IPv4 when the service has any IPv4 socket, otherwise `::1`. Probing
+    /// 127.0.0.1 unconditionally missed every service bound to `::1` alone —
+    /// which is what Node 18+ does for `localhost`, so Vite and friends lost
+    /// their HTTP evidence.
+    public static func loopbackHost(for addresses: [String]) -> String {
+        let hasIPv4 = addresses.contains { !$0.contains(":") }
+        return hasIPv4 ? "127.0.0.1" : "[::1]"
+    }
+
+    /// Probe `port` on loopback, unless the port is a database or otherwise
     /// known not to speak HTTP.
-    public func probe(port: Int, force: Bool = false) async -> HTTPProbeResult? {
+    public func probe(port: Int, host: String = "127.0.0.1", force: Bool = false) async -> HTTPProbeResult? {
         if !force, let cached = cache[port], Date().timeIntervalSince(cached.at) < cacheLifetime {
             return cached.result
         }
 
-        guard let url = URL(string: "http://127.0.0.1:\(port)/") else { return nil }
+        guard host == "127.0.0.1" || host == "[::1]",
+              let url = URL(string: "http://\(host):\(port)/") else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("PortScope/0.1 (local port scanner)", forHTTPHeaderField: "User-Agent")
+        request.setValue("PortScope (local port scanner)", forHTTPHeaderField: "User-Agent")
         request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
 
         do {
@@ -90,5 +103,19 @@ public actor HTTPProber {
 
     public func invalidate(port: Int) {
         cache[port] = nil
+    }
+}
+
+/// Declines every redirect. The 3xx response itself is returned to the
+/// caller, which is what identification wants anyway: a `Location` header is
+/// evidence, following it is a request to a host nobody chose.
+private final class NoRedirects: NSObject, URLSessionTaskDelegate, Sendable {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest
+    ) async -> URLRequest? {
+        nil
     }
 }

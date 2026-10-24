@@ -97,9 +97,10 @@ Confidence is capped at 99%: every signal here is inference. A port that
 answers HTTP but matches nothing is reported as "HTTP API" at 35%, not as
 "unknown" — that something is serving HTTP is already useful.
 
-The probe is deliberately narrow: `127.0.0.1` only (never the LAN address, even
-for a service bound to `0.0.0.0`), 1 s timeout, fixed User-Agent, no proxy,
-and skipped entirely for ports that cannot speak HTTP.
+The probe is deliberately narrow: loopback only — `127.0.0.1`, or `::1` for a
+service bound to IPv6 alone — never the LAN address, even for a service bound
+to `0.0.0.0`. Redirects are never followed, 1 s timeout, fixed User-Agent, no
+proxy, and skipped entirely for ports that cannot speak HTTP.
 
 ## How ports are folded
 
