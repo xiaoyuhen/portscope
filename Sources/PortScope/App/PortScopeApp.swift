@@ -48,6 +48,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// window and the popover never disagree about the machine.
     @MainActor let store = PortStore()
     private var menuBar: MenuBarController?
+    private var mainWindow: MainWindowController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         _ = HeadlessMode.handleIfNeeded()
@@ -63,30 +64,97 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let window = MainWindowController(store: store, locale: AppLocale.shared)
+        mainWindow = window
         menuBar = MenuBarController(
             store: store,
             locale: AppLocale.shared,
-            openWindow: { [weak self] in self?.showMainWindow() }
+            openWindow: { window.show() }
         )
         // With `.accessory`, SwiftUI does not bring the window up on its own,
         // so the first launch opens it once. Afterwards the app is a menu bar
         // citizen and the window appears only when asked for.
-        showMainWindow()
+        window.show()
     }
 
-    /// Bring the main window forward, creating it again if the user closed it —
-    /// the app keeps running in the menu bar, so "Open PortScope" must always
-    /// have something to show.
-    private func showMainWindow() {
-        NSApp.activate(ignoringOtherApps: true)
-        if let window = NSApp.windows.first(where: { $0.canBecomeMain }) {
-            window.makeKeyAndOrderFront(nil)
-        }
+    /// Clicking the Dock icon is the other way back to the window, and with an
+    /// accessory app it is the only standard gesture left.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool {
+        mainWindow?.show()
+        return false
     }
 
     /// Closing the window leaves PortScope in the menu bar rather than quitting:
     /// a port monitor is most useful when it is always there.
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         false
+    }
+}
+
+/// Owns the one main window and keeps it reopenable.
+///
+/// SwiftUI's `WindowGroup` window is destroyed when it is closed, which left
+/// "Open PortScope" with nothing to bring forward — the button did nothing at
+/// all. Closing is therefore intercepted and turned into hiding, so the window
+/// survives and can be shown again. If it is ever gone anyway (SwiftUI rebuilt
+/// the scene, the window was released), a fresh one is built from the same
+/// root view, so the menu bar item always has something to open.
+@MainActor
+final class MainWindowController: NSObject, NSWindowDelegate {
+    private let store: PortStore
+    private let locale: AppLocale
+    private var window: NSWindow?
+
+    init(store: PortStore, locale: AppLocale) {
+        self.store = store
+        self.locale = locale
+        super.init()
+    }
+
+    func show() {
+        let window = self.window ?? adoptSwiftUIWindow() ?? makeWindow()
+        self.window = window
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+    }
+
+    /// The window SwiftUI created for its `WindowGroup`.
+    ///
+    /// It is kept rather than rebuilt because it already carries the scene's
+    /// size, position and styling. The strong reference held here also keeps it
+    /// alive: `windowShouldClose` below declines the close, so it is never
+    /// destroyed and this reference can never dangle.
+    private func adoptSwiftUIWindow() -> NSWindow? {
+        guard let window = NSApp.windows.first(where: { $0.canBecomeMain }) else { return nil }
+        window.delegate = self
+        return window
+    }
+
+    private func makeWindow() -> NSWindow {
+        let window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 1120, height: 720),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.title = locale.t("app.name")
+        window.minSize = NSSize(width: 860, height: 520)
+        window.isReleasedWhenClosed = false
+        window.delegate = self
+        window.contentViewController = NSHostingController(
+            rootView: RootView(store: store)
+                .environmentObject(locale)
+                .environmentObject(store)
+        )
+        window.center()
+        return window
+    }
+
+    /// Hide instead of destroy, so the window can be shown again.
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        sender.orderOut(nil)
+        return false
     }
 }

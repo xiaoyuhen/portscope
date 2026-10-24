@@ -215,10 +215,6 @@ struct MenuBarPanel: View {
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
 
-    private var developmentPorts: [PortInfo] {
-        store.ports.filter { !store.hiddenPorts.contains($0.port) }
-    }
-
     var body: some View {
         // Fixed height on each band, with the list taking the remainder: a
         // ScrollView with `maxHeight: .infinity` alone let its content paint
@@ -264,8 +260,17 @@ struct MenuBarPanel: View {
         // panel that modifier let the scroll content paint over the footer.
         ScrollView {
             LazyVStack(spacing: 0) {
-                ForEach(developmentPorts) { info in
-                    MenuBarRow(info: info)
+                // Same rows as the main window, from the same model: desktop
+                // apps and system services stay folded here too, behind the
+                // same disclosure. The popover used to filter on its own and
+                // listed WeChat and ControlCenter inline.
+                ForEach(store.rows) { row in
+                    switch row {
+                    case .port(let info, let muted):
+                        MenuBarRow(info: info, isMuted: muted)
+                    case .backgroundDisclosure(let count):
+                        MenuBarDisclosure(count: count)
+                    }
                     Hairline(inset: 12)
                 }
             }
@@ -297,25 +302,30 @@ struct MenuBarPanel: View {
 /// is for a glance, not for investigation.
 struct MenuBarRow: View {
     let info: PortInfo
+    /// Background rows are drawn at reduced contrast, as in the main window.
+    var isMuted: Bool = false
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
     @StateObject private var hovering = LocalFlag()
+
+    private var tint: Color { Theme.tint(for: info.service?.kind ?? .other) }
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: Presentation.symbol(for: info.service?.kind))
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Theme.tint(for: info.service?.kind ?? .other))
+                .foregroundStyle(tint)
                 .frame(width: 20, height: 20)
                 .background(
-                    Theme.tint(for: info.service?.kind ?? .other).opacity(0.12),
+                    tint.opacity(isMuted ? 0.07 : 0.12),
                     in: RoundedRectangle(cornerRadius: 5)
                 )
+                .opacity(isMuted ? 0.75 : 1)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(info.service?.title ?? info.processName)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.textPrimary)
+                    .foregroundStyle(isMuted ? Theme.textSecondary : Theme.textPrimary)
                     .lineLimit(1)
                 Text(info.service?.projectName ?? info.displayName)
                     .font(.system(size: 10))
@@ -353,6 +363,44 @@ struct MenuBarRow: View {
         .onTapGesture {
             if let url = info.localURL { NSWorkspace.shared.open(url) }
         }
+    }
+}
+
+/// The folded-background row in the popover.
+///
+/// Same job as the window's disclosure: say how many ports are put away and
+/// open them on click. It is a row height rather than the window's 32 pt so the
+/// panel's fixed height stays a whole number of rows.
+struct MenuBarDisclosure: View {
+    let count: Int
+    @EnvironmentObject private var locale: AppLocale
+    @EnvironmentObject private var store: PortStore
+    @StateObject private var hovering = LocalFlag()
+
+    var body: some View {
+        Button {
+            store.showBackgroundServices = true
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .semibold))
+                    .foregroundStyle(Theme.textTertiary)
+                Text(locale.t("ports.backgroundHidden", count))
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.textSecondary)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Text(locale.t("ports.backgroundHint"))
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.textTertiary)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: MenuBarPanel.rowHeight)
+            .contentShape(Rectangle())
+            .background(hovering.value ? Theme.rowHover : .clear)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering.value = $0 }
     }
 }
 

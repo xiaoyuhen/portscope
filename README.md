@@ -31,7 +31,9 @@ PortScope answers those questions at a glance, and shows its reasoning.
   [Safety](#safety) for exactly what it will and will not touch.
 - **A menu bar count.** Closing the window leaves PortScope running in the menu
   bar with a live port count.
-- **English and 简体中文**, switchable at runtime.
+- **English and 简体中文**, switchable at runtime. English is the default for
+  everyone, whatever the system language is; 简体中文 applies once it is chosen
+  in Settings.
 - **Open in browser** or copy `localhost:port` from any row.
 
 ## Requirements
@@ -111,6 +113,29 @@ confirms the port is free. Current matrix: the Express rate-limiter, a Vite dev
 server, Python's `http.server`, a framework-less Node server, and an Express +
 Vite monorepo. See [docs/compatibility.md](docs/compatibility.md).
 
+## Validation
+
+Two layers, because they catch different things.
+
+```bash
+PortScope --selftest      # 56 logic checks: scanner, identifier, process control,
+                          # folding rules, shared list model, localization
+./scripts/validate.sh     # 20 UI checks against the running app
+```
+
+The self-tests cannot see the failures that matter most in a menu bar app —
+whether a window comes back, whether the panel shows the same rows as the
+window, which language a fresh install opens in. `scripts/validate.sh` drives
+the built app through Accessibility, the way a person would: it launches a
+scratch copy with an isolated preferences domain, opens the menu bar panel,
+closes the window, presses "Open PortScope", and reads the screen back. It
+fails if the two surfaces disagree about which ports are folded, if the window
+does not reopen (twice), if a fresh install is not in English, or if a stored
+Chinese preference is not honoured.
+
+Run it after any change to the window, the menu bar, or the language path. It
+needs Accessibility permission for the terminal.
+
 ## Architecture
 
 ```
@@ -121,6 +146,7 @@ Sources/
   PortScope/             # SwiftUI app
     App/                 # Entry point, store, menu bar, CLI commands
     UI/                  # Design tokens and views
+Support/Validation/      # UI harness driven by scripts/validate.sh
 ```
 
 ### Toolchain notes

@@ -33,6 +33,7 @@ public enum SelfTest {
         }
         all.append(contentsOf: ProcessControlChecks.all)
         all.append(contentsOf: BackgroundClassificationChecks.all)
+        all.append(contentsOf: PortListModelChecks.all)
         return all
     }
 

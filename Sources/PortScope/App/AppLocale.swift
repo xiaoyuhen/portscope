@@ -2,8 +2,8 @@ import Combine
 import Foundation
 import PortScopeKit
 
-/// Runtime language switch. Reads the user's system preference the first time,
-/// then remembers an explicit choice in UserDefaults.
+/// Runtime language switch. Starts in English for everyone and only changes
+/// when the user picks a language in Settings.
 ///
 /// This is an `ObservableObject` rather than an `@Observable` class on purpose:
 /// Apple's Command Line Tools ship SwiftUI without the `SwiftUIMacros` plugin,
@@ -14,20 +14,25 @@ final class AppLocale: ObservableObject {
     static let shared = AppLocale()
 
     private static let defaultsKey = "PortScope.language"
+    /// Where the choice is remembered. Injectable so a check can use a scratch
+    /// suite instead of the real user's preferences.
+    private let defaults: UserDefaults
 
     @Published var language: String {
         didSet {
             guard language != oldValue else { return }
-            UserDefaults.standard.set(language, forKey: Self.defaultsKey)
+            defaults.set(language, forKey: Self.defaultsKey)
         }
     }
 
     var isChinese: Bool { language == "zh-Hans" }
 
-    init() {
-        let stored = UserDefaults.standard.string(forKey: Self.defaultsKey)
-        let valid = stored.map { LocalizationSupport.supportedLanguages.contains($0) } ?? false
-        language = valid ? stored! : LocalizationSupport.preferredLanguage()
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        // Not the system language: the default is English even on a Chinese
+        // macOS, and Simplified Chinese is applied only when it was chosen
+        // here. See `LocalizationSupport.defaultLanguage` for why.
+        language = LocalizationSupport.resolve(stored: defaults.string(forKey: Self.defaultsKey))
     }
 
     /// Translate a key in the current language.
