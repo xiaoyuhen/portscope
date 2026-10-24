@@ -85,7 +85,7 @@ Two options, both fine:
      --jq '.assets[] | "\(.name): \(.download_count)"'
    ```
 
-   This is what `.github/workflows/telemetry-report.yml` posts monthly.
+   This is what `.github/workflows/usage-report.yml` posts monthly.
 
 2. **Do nothing.** Build without `PORTSCOPE_TELEMETRY_URL` and the app has no
    endpoint to call. `Telemetry.isEnabled` also honours
