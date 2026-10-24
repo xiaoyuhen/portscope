@@ -28,6 +28,7 @@ final class AppLocale: ObservableObject {
     var isChinese: Bool { language == "zh-Hans" }
 
     init(defaults: UserDefaults = .standard) {
+        LegacyPreferences.migrateIfNeeded()
         self.defaults = defaults
         // Not the system language: the default is English even on a Chinese
         // macOS, and Simplified Chinese is applied only when it was chosen

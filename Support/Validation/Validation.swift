@@ -88,7 +88,7 @@ final class Harness {
     // MARK: Lifecycle
 
     private func launch(freshPreferences: Bool) throws {
-        scratchDomain = "com.portscope.validation.\(getpid())"
+        scratchDomain = "io.github.xiaoyuhen.portscope.validation.\(getpid())"
         if freshPreferences { wipeScratchPreferences() }
         // Copy the bundle so the run cannot disturb an installed copy, and give
         // it a bundle identifier of its own so preferences stay isolated.
@@ -225,7 +225,7 @@ final class Harness {
 
     private func relaunchWithStoredChinese() throws {
         stop()
-        scratchDomain = "com.portscope.validation.\(getpid())"
+        scratchDomain = "io.github.xiaoyuhen.portscope.validation.\(getpid())"
         let defaults = Process()
         defaults.executableURL = URL(fileURLWithPath: "/usr/bin/defaults")
         defaults.arguments = ["write", scratchDomain, "PortScope.language", "zh-Hans"]
