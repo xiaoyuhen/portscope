@@ -1,0 +1,14 @@
+version: 2
+updates:
+  # The project has no package dependencies on purpose — the engine uses only
+  # the standard library and Darwin. What can go stale is the Actions
+  # themselves, so that is what this watches.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        patterns: ["*"]

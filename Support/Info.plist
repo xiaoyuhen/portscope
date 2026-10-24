@@ -39,5 +39,9 @@
         <string>en</string>
         <string>zh-Hans</string>
     </array>
+    <!-- Anonymous launch counting. See Sources/PortScope/App/Telemetry.swift
+         and docs/privacy.md. Set to an empty string in a fork to disable. -->
+    <key>PortScopeTelemetryURL</key>
+    <string>__TELEMETRY_URL__</string>
 </dict>
 </plist>

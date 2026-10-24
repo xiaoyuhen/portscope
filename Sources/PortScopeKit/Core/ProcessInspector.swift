@@ -87,7 +87,10 @@ public final class ProcessInspector: @unchecked Sendable {
         var buffer = [CChar](repeating: 0, count: 256)
         let length = proc_name(pid, &buffer, UInt32(buffer.count))
         if length > 0 {
-            let name = String(cString: buffer)
+            // `proc_name` returns the length without the terminator, so only
+            // that prefix is the name; the rest of the buffer is zero padding.
+            let name = String(decoding: buffer.prefix(Int(length)).map(UInt8.init(bitPattern:)),
+                              as: UTF8.self)
             if !name.isEmpty { return name }
         }
         if let path { return (path as NSString).lastPathComponent }
@@ -159,7 +162,7 @@ public final class ProcessInspector: @unchecked Sendable {
         )
         guard size == MemoryLayout<proc_vnodepathinfo>.size else { return nil }
         let path = withUnsafeBytes(of: &info.pvi_cdir.vip_path) { raw in
-            String(cString: raw.baseAddress!.assumingMemoryBound(to: CChar.self))
+            String(decoding: raw.prefix { $0 != 0 }, as: UTF8.self)
         }
         return path.isEmpty || path == "/" ? nil : path
     }

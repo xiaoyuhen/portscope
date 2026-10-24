@@ -4,12 +4,29 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+# A new push to the same branch cancels the previous run: on a PR that is being
+# iterated on, the old build's result is already stale.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+# Telemetry is off in CI builds unless the repository defines a receiver URL as
+# a variable (Settings → Variables). Leaving it unset is the safe default: a
+# build with no endpoint never sends anything.
+env:
+  PORTSCOPE_TELEMETRY_URL: ${{ vars.PORTSCOPE_TELEMETRY_URL }}
 
 jobs:
   build-and-test:
+    name: Build and test
     # macos-15 is the oldest runner image with a Swift 6 toolchain. The app's
-    # own deployment target is macOS 14, which is set in Package.swift and does
-    # not depend on the runner image.
+    # own deployment target is macOS 14, set in Package.swift, and does not
+    # depend on the runner image.
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
@@ -25,19 +42,123 @@ jobs:
       - name: Self-test
         run: swift run -c release PortScope --selftest
 
+      - name: Compatibility matrix
+        # Real servers, started here, identified by PortScope, stopped through
+        # PortScope. Needs nothing outside the repo.
+        run: ./scripts/compat/fixtures.sh
+
+      - name: Telemetry worker
+        # Node only, no dependencies. The checks that matter are the privacy
+        # ones: fields outside the contract must never reach storage.
+        run: node infra/telemetry/worker.test.mjs
+
       - name: Assemble app bundle
         run: ./scripts/build.sh --release
 
       - name: Verify bundle
         run: |
-          test -x dist/PortScope.app/Contents/MacOS/PortScope
-          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" dist/PortScope.app/Contents/Info.plist
-          codesign -dv dist/PortScope.app 2>&1 | head -5
+          set -euo pipefail
+          APP=dist/PortScope.app
+          test -x "$APP/Contents/MacOS/PortScope"
+          test -f "$APP/Contents/Resources/AppIcon.icns"
+          # Both localizations must ship: a missing one silently falls back to
+          # English for Chinese users.
+          for lang in en.lproj zh-Hans.lproj; do
+            test -d "$APP/Contents/Resources/$lang" || { echo "missing $lang"; exit 1; }
+          done
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Contents/Info.plist"
+          codesign --verify --deep --strict "$APP"
 
-      # The UI checks drive a real app through Accessibility. A CI runner is a
-      # headless macOS instance: there is no logged-in GUI session to attach
-      # to, so the harness cannot see a window and every check would fail for a
-      # reason that has nothing to do with the change. It runs locally (see
-      # README › Validation); CI compiles it so it cannot rot.
       - name: Compile the UI harness
+        # The UI checks drive a real app through Accessibility. A runner is a
+        # headless macOS instance with no logged-in GUI session, so the harness
+        # cannot see a window and every check would fail for a reason unrelated
+        # to the change. It runs locally (README › Validation); compiling it
+        # here keeps it from rotting.
         run: swiftc -O -parse-as-library Support/Validation/Validation.swift -o /tmp/validate
+
+  package:
+    name: Package release
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and zip
+        run: ./scripts/package.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PortScope-${{ github.sha }}
+          path: |
+            dist/PortScope-*.zip
+            dist/PortScope-*.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+  lint:
+    name: Lint scripts and plist
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shell scripts parse
+        run: |
+          set -euo pipefail
+          status=0
+          for script in scripts/*.sh scripts/compat/*.sh; do
+            if ! bash -n "$script"; then
+              echo "::error file=$script::syntax error"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Scripts are executable
+        run: |
+          set -euo pipefail
+          status=0
+          for script in scripts/*.sh scripts/compat/*.sh; do
+            if [[ ! -x "$script" ]]; then
+              echo "::error file=$script::not executable"
+              status=1
+            fi
+          done
+          exit $status
+
+      - name: Info.plist is valid
+        run: plutil -lint Support/Info.plist
+
+      - name: Localizations have the same keys
+        # A key present in English but missing in Chinese silently shows the
+        # English sentence to a Chinese user.
+        run: |
+          python3 - <<'PY'
+          import re, sys, pathlib
+          def keys(path):
+              text = pathlib.Path(path).read_text(encoding="utf-8")
+              return set(re.findall(r'^"([^"]+)"\s*=', text, re.M))
+          en = keys("Sources/PortScope/Resources/en.lproj/Localizable.strings")
+          zh = keys("Sources/PortScope/Resources/zh-Hans.lproj/Localizable.strings")
+          missing = sorted(en - zh)
+          extra = sorted(zh - en)
+          for key in missing:
+              print(f"::error::zh-Hans is missing '{key}'")
+          for key in extra:
+              print(f"::warning::zh-Hans has '{key}' which English does not")
+          print(f"{len(en)} keys, {len(missing)} missing, {len(extra)} extra")
+          sys.exit(1 if missing else 0)
+          PY
+
+      - name: No credentials committed
+        run: |
+          set -euo pipefail
+          # A cheap guard, not a substitute for secret scanning. Catches the
+          # shapes that are easy to paste by accident.
+          if git grep -nEI '(ghp_[A-Za-z0-9]{20}|github_pat_[A-Za-z0-9_]{20}|sk-[A-Za-z0-9]{32}|AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'; then
+            echo "::error::a credential-shaped string is committed"
+            exit 1
+          fi
+          echo "no credential-shaped strings found"

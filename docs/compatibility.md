@@ -1,17 +1,50 @@
 # Compatibility matrix
 
-A port monitor is only as good as its answers on real servers. This matrix
-starts real projects from this machine, checks what PortScope reports, then
-stops each one through PortScope and confirms the port is free.
+A port monitor is only as good as its answers on real servers. These suites
+start real servers, check what PortScope reports, then stop each one *through
+PortScope* and confirm the port is free.
 
-Run it with:
+There are two, and they answer different questions.
+
+## Portable suite — runs anywhere, including CI
+
+```bash
+scripts/compat/fixtures.sh          # all cases
+scripts/compat/fixtures.sh express  # cases whose name matches
+```
+
+Writes its own fixtures into a temp directory and runs them with the Python and
+Node already on macOS. Nothing is installed, nothing is downloaded, and nothing
+outside this repository is needed — which is what makes it runnable in CI.
+
+| Case | What it is | Signal it tests |
+|---|---|---|
+| `express-header` | Node server sending `X-Powered-By: Express` | HTTP tier identifies from a header alone |
+| `plain-node` | Framework-less Node HTTP server | no framework is invented; honest generic label |
+| `python-http-server` | Python's built-in static server, loopback-bound | process tier from argv, plus exposure |
+| `project-directory` | Node server started inside a `package.json` directory | project attribution |
+
+Results on a clean run:
+
+```
+PASS  express-header      {"title": "Express", "kind": "api", "exposure": "loopback"}
+PASS  plain-node          {"title": "Node.js", "kind": "web", "process": "node"}
+PASS  python-http-server  {"title": "Python http.server", "kind": "web", "exposure": "loopback"}
+PASS  project-directory   {"title": "Node.js", "kind": "web", "project": "project"}
+```
+
+Each case also asserts that `PortScope --stop` actually frees the port.
+
+## Local suite — real projects on a developer machine
 
 ```bash
 scripts/compat/run.sh            # all cases
 scripts/compat/run.sh vite       # cases whose name matches
 ```
 
-## Cases
+This one is not in CI because it depends on projects that exist only on a
+particular machine (`$CODE_DIR`, default `~/Documents/code`). It is the more
+demanding check: real Vite, real monorepo, real dependency trees.
 
 | Case | What it is | Started with | Port |
 |---|---|---|---|
@@ -21,7 +54,9 @@ scripts/compat/run.sh vite       # cases whose name matches
 | `interview-sandbox` | Framework-less Node HTTP server | `node server.js` | 3104 |
 | `monorepo-api` | Express BFF in a monorepo with a Vite app | `npx tsx src/index.ts` | 3001 |
 
-## Results
+## What the local suite found
+
+Recorded because each of these was a real defect, not a hypothetical:
 
 | Case | Reported as | Kind | Confidence | Exposure |
 |---|---|---|---|---|
@@ -31,29 +66,14 @@ scripts/compat/run.sh vite       # cases whose name matches
 | interview-sandbox | Node.js | web | 55% | loopback |
 | monorepo-api | Express | API | 85% | all interfaces |
 
-Every case also passes the action half: `--stop <port>` succeeds and the port
-is no longer listening afterwards.
+Defects it caught during development:
 
-## What each case proves
-
-- **rate-limiter** — the project this app was built against. Exercises an API
-  behind a framework whose argv says only `scripts/dev.js`, plus a child process
-  (the ephemeral Redis) that must not be left behind.
-- **vite-dev-server** — the classic case. The process is `node`, the framework
-  is only visible as a resolved script path in argv
-  (`…/node_modules/vite/bin/vite.js`), and the port is a well-known one, so a
-  port-only guess would also have "worked" — the argv match is what makes it
-  95% rather than 40%.
-- **python-http-server** — confirms the exposure model: bound to loopback, so it
-  is reported as `loopback`, not flagged as network-reachable.
-- **interview-sandbox** — no framework anywhere. PortScope says "Node.js, 55%"
-  rather than inventing an answer, which is the intended behaviour.
-- **monorepo-api** — two services in one repo, started separately, identified
-  separately. A naive scanner reports both as "node" and cannot tell them apart.
-
-## Adding a case
-
-Add a `run_case` line. Expectations are `field=value` or `field~substring` over
-the service description (`title`, `kind`, `confidence`, `project`, `exposure`,
-`process`). Keep the port unusual so the well-known-port tier cannot mask a
-process-tier failure.
+- **Vite not recognised** because `node_modules/.bin/vite` resolves to a
+  different argv path than the one the fingerprint expected. Fixed by matching
+  an argument path *suffix* rather than an exact path.
+- **`serve` fingerprint matched `manage.py runserver`**, mislabelling Django
+  projects. Fixed by splitting fingerprints into `all:` (every signal must
+  match) and `any:` (one is enough) combinators.
+- **Corroboration inflated vague answers**, letting a generic "Node.js" outrank
+  a specific "HTTP API". Fixed so only a *different* agreeing candidate raises
+  confidence.

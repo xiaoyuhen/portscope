@@ -47,6 +47,7 @@ cp "$ICON_BUILD/MenuBarIcon.png" "$APP/Contents/Resources/MenuBarIcon.png"
 cp "$ICON_BUILD/MenuBarIcon@2x.png" "$APP/Contents/Resources/MenuBarIcon@2x.png"
 
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD/" \
+    -e "s|__TELEMETRY_URL__|${PORTSCOPE_TELEMETRY_URL:-}|" \
     "$ROOT/Support/Info.plist" > "$APP/Contents/Info.plist"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 

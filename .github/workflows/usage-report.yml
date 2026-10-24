@@ -1,0 +1,75 @@
+name: Usage report
+
+# GitHub keeps repository traffic for 14 days only, so a monthly snapshot is
+# the only way to see a trend. Release download counts are cumulative and need
+# no schedule, but they are printed here too for one place to look.
+#
+# Every number here is aggregate. Nothing identifies a person.
+on:
+  schedule:
+    # 06:00 UTC on the first of the month.
+    - cron: "0 6 1 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    name: Snapshot usage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          repo="${GITHUB_REPOSITORY}"
+
+          views=$(gh api "repos/${repo}/traffic/views" --jq '[.views[] | .uniques] | add // 0')
+          clones=$(gh api "repos/${repo}/traffic/clones" --jq '[.clones[] | .uniques] | add // 0')
+
+          # Download counts across every release, per asset.
+          downloads=$(gh api "repos/${repo}/releases" --paginate \
+            --jq '[.[].assets[] | {name: .name, downloads: .download_count}] | flatten | .[] | "\(.name): \(.downloads)"' \
+            2>/dev/null || echo "no releases yet")
+
+          {
+            echo "## Usage snapshot — $(date -u +%Y-%m-%d)"
+            echo
+            echo "| Signal | Value | Window |"
+            echo "|---|---|---|"
+            echo "| Unique visitors | ${views} | last 14 days |"
+            echo "| Unique cloners | ${clones} | last 14 days |"
+            echo
+            echo "### Release downloads (cumulative)"
+            echo '```'
+            echo "${downloads}"
+            echo '```'
+            echo
+            echo "_Aggregate counts only. GitHub retains traffic for 14 days._"
+          } > report.md
+
+          cat report.md
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # One rolling issue rather than a new issue every month: the point is
+          # a trend, and 12 issues a year is noise.
+          title="Usage"
+          existing=$(gh issue list --search "in:title \"${title}\"" --state open \
+            --json number,title --jq '.[] | select(.title=="'"${title}"'") | .number' | head -1)
+
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body-file report.md
+          else
+            gh issue create --title "$title" --body-file report.md \
+              --label "metrics" 2>/dev/null || \
+            gh issue create --title "$title" --body-file report.md
+          fi

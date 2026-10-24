@@ -90,6 +90,35 @@ enum ResourceChecks {
                 let missing = referenced.subtracting(Set(english)).sorted()
                 try expect(missing.isEmpty, "missing summary keys: \(missing.joined(separator: ", "))")
             }),
+            // The privacy promise is that the telemetry payload has a fixed,
+            // small set of fields. These checks make adding a field a
+            // deliberate act rather than an accident, so the documentation and
+            // the code cannot drift apart.
+            ("the telemetry allowlist contains no local data", {
+                let overlap = TelemetryContract.allowedFields
+                    .intersection(TelemetryContract.forbiddenFields)
+                try expect(overlap.isEmpty,
+                           "local-data fields allowed in telemetry: \(overlap.sorted())")
+            }),
+            ("a real telemetry payload passes the contract", {
+                // Exactly what Telemetry.payload builds, field for field.
+                let payload = [
+                    "event": "launch", "app": "PortScope", "version": "0.2.0",
+                    "os": "14.5", "arch": "arm64", "id": "3F2A9C41-1B7E-4D2A",
+                ]
+                try expect(TelemetryContract.isCompliant(payload),
+                           "the documented payload is not compliant")
+                try expectEqual(payload.keys.count, TelemetryContract.allowedFields.count,
+                                "payload field count")
+            }),
+            ("a payload carrying a port is rejected", {
+                let leaky = [
+                    "event": "launch", "app": "PortScope", "version": "0.2.0",
+                    "os": "14.5", "arch": "arm64", "id": "x", "port": "3000",
+                ]
+                try expect(!TelemetryContract.isCompliant(leaky),
+                           "a payload with a port must not be compliant")
+            }),
         ]
     }
 

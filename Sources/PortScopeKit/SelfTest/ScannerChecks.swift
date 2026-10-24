@@ -99,8 +99,7 @@ final class LoopbackListener {
         }
         guard bound == 0 else {
             Darwin.close(descriptor)
-            throw CheckFailure(description: "bind() failed: \(String(cString: strerror(errno)))")
-        }
+            throw CheckFailure(description: "bind() failed: \(String(cString: strerror(errno)))")        }
         guard listen(fd, 1) == 0 else {
             Darwin.close(descriptor)
             throw CheckFailure(description: "listen() failed")

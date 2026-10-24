@@ -412,18 +412,31 @@ final class Harness {
         return collectText(panel)
     }
 
+    /// Opens the panel if it is not already open.
+    ///
+    /// Pressing the status item *toggles*, so a helper that always presses is
+    /// only correct if it knows the current state. It waits for the panel to
+    /// appear and presses again if the first press closed it instead — the
+    /// panel can be dismissed by the system between checks.
     private func openPanel() throws {
         guard let item = statusItems().first else { throw Failure("no status item") }
-        AXUIElementPerformAction(item, kAXPressAction as CFString)
-        Thread.sleep(forTimeInterval: 1.0)
-        guard panelWindow() != nil else { throw Failure("panel did not open") }
+        for _ in 0..<3 {
+            if panelWindow() != nil { return }
+            AXUIElementPerformAction(item, kAXPressAction as CFString)
+            Thread.sleep(forTimeInterval: 1.0)
+        }
+        guard panelWindow() != nil else {
+            throw Failure("panel did not open after three presses")
+        }
     }
 
     private func closePanel() {
-        // Clicking the status item again is the documented way to dismiss it.
         guard let item = statusItems().first else { return }
-        AXUIElementPerformAction(item, kAXPressAction as CFString)
-        Thread.sleep(forTimeInterval: 0.5)
+        for _ in 0..<3 {
+            guard panelWindow() != nil else { return }
+            AXUIElementPerformAction(item, kAXPressAction as CFString)
+            Thread.sleep(forTimeInterval: 0.6)
+        }
     }
 
     private func closeWindow() throws {

@@ -305,6 +305,26 @@ struct SettingsView: View {
                             .padding(2)
                             .background(RoundedRectangle(cornerRadius: Theme.controlRadius).fill(Theme.surfaceInset.opacity(0.5)))
                         }
+
+                        Hairline()
+
+                        // Telemetry is a switch in the place people look for
+                        // settings, not a line in a document. It is on by
+                        // default; turning it off takes effect immediately and
+                        // stops any further send.
+                        row(
+                            title: locale.t("settings.telemetryTitle"),
+                            subtitle: locale.t("settings.telemetrySubtitle")
+                        ) {
+                            Toggle("", isOn: Binding(
+                                get: { Telemetry.isEnabled },
+                                set: { Telemetry.setEnabled($0) }
+                            ))
+                            .labelsHidden()
+                            .toggleStyle(.switch)
+                            .controlSize(.small)
+                            .accessibilityLabel(locale.t("settings.telemetryTitle"))
+                        }
                     }
                     .padding(16)
                 }
