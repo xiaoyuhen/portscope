@@ -108,7 +108,7 @@ struct OverviewView: View {
                                 .font(.system(size: 11))
                                 .foregroundStyle(Theme.textSecondary)
                             Spacer()
-                            Text("\(count)")
+                            Text(verbatim: "\(count)")
                                 .font(Theme.monoSmall)
                                 .foregroundStyle(Theme.textTertiary)
                         }
@@ -155,7 +155,7 @@ struct OverviewView: View {
                                         .foregroundStyle(Theme.textPrimary)
                                         .lineLimit(1)
                                     Spacer()
-                                    Text(":\(info.port)")
+                                    Text(verbatim: ":\(info.port)")
                                         .font(Theme.monoSmall)
                                         .foregroundStyle(Theme.textSecondary)
                                 }
@@ -217,7 +217,7 @@ struct OverviewView: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(Theme.textPrimary)
                                 .lineLimit(1)
-                            Text(":\(event.port)")
+                            Text(verbatim: ":\(event.port)")
                                 .font(Theme.monoSmall)
                                 .foregroundStyle(Theme.textSecondary)
                             Spacer()

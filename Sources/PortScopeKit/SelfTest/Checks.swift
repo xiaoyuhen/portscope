@@ -64,26 +64,45 @@ enum PortInfoChecks {
     }
 }
 
-/// Ensures the two shipped string tables contain the same keys.
+/// Ensures every shipped string table matches English.
 ///
 /// A missing translation is not a crash — the lookup falls back to English —
-/// but it is a defect, and one that is invisible unless someone reads the
-/// Chinese UI. This check makes drift fail the build instead.
+/// but it is a defect, and one that is invisible unless someone reads that
+/// language's UI. A translation with different format specifiers is worse:
+/// `String(format:)` reads the wrong argument, or none. These checks make
+/// either fail the build instead.
 enum ResourceChecks {
     static var all: [(String, () throws -> Void)] {
+        let translations = LocalizationSupport.supportedLanguages.filter { $0 != "en" }
+        return translations.flatMap { language -> [(String, () throws -> Void)] in
+            [
+                ("every English string has a \(language) translation", {
+                    let english = try loadTable("en"), other = try loadTable(language)
+                    let missing = Set(english.keys).subtracting(other.keys).sorted()
+                    try expect(missing.isEmpty, "missing \(language) keys: \(missing.joined(separator: ", "))")
+                }),
+                ("every \(language) string exists in English", {
+                    let english = try loadTable("en"), other = try loadTable(language)
+                    let extra = Set(other.keys).subtracting(english.keys).sorted()
+                    try expect(extra.isEmpty, "keys only in \(language): \(extra.joined(separator: ", "))")
+                }),
+                ("\(language) uses the same format specifiers as English", {
+                    let english = try loadTable("en"), other = try loadTable(language)
+                    let mismatched = english.keys.sorted().filter { key in
+                        guard let translated = other[key] else { return false }
+                        return specifiers(in: english[key]!) != specifiers(in: translated)
+                    }
+                    try expect(mismatched.isEmpty,
+                               "\(language) specifiers differ: \(mismatched.joined(separator: ", "))")
+                }),
+            ]
+        } + fixedChecks
+    }
+
+    private static var fixedChecks: [(String, () throws -> Void)] {
         [
-            ("every English string has a Chinese translation", {
-                let (english, chinese) = try loadTables()
-                let missing = Set(english).subtracting(Set(chinese)).sorted()
-                try expect(missing.isEmpty, "missing zh-Hans keys: \(missing.joined(separator: ", "))")
-            }),
-            ("every Chinese string exists in English", {
-                let (english, chinese) = try loadTables()
-                let extra = Set(chinese).subtracting(Set(english)).sorted()
-                try expect(extra.isEmpty, "keys only in zh-Hans: \(extra.joined(separator: ", "))")
-            }),
             ("every service fingerprint has a summary string", {
-                let (english, _) = try loadTables()
+                let english = Array(try loadTable("en").keys)
                 let referenced = Set(ServiceCatalog.processFingerprints.map(\.match.summaryKey)
                     + ServiceCatalog.httpFingerprints.map(\.match.summaryKey)
                     + ServiceCatalog.portFingerprints.map(\.match.summaryKey))
@@ -122,7 +141,7 @@ enum ResourceChecks {
         ]
     }
 
-    /// Parses the `.strings` files directly from the source tree. The harness
+    /// Parses a `.strings` file directly from the source tree. The harness
     /// runs before the app bundle exists, so it reads the same files the bundle
     /// is built from rather than going through `Bundle`.
     ///
@@ -130,39 +149,58 @@ enum ResourceChecks {
     /// with `--selftest` cannot find it — it reported three failures for a
     /// directory on a CI runner. Outside a checkout the tables shipped in the
     /// app bundle are read instead, which is what a user's copy actually shows.
-    private static func loadTables() throws -> (english: [String], chinese: [String]) {
+    private static func loadTable(_ language: String) throws -> [String: String] {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()   // SelfTest
             .deletingLastPathComponent()   // PortScopeKit
             .deletingLastPathComponent()   // Sources
             .deletingLastPathComponent()   // repo root
         let sourceResources = root.appendingPathComponent("Sources/PortScope/Resources")
-        let english = "en.lproj/Localizable.strings"
-        let resources: URL
-        if FileManager.default.fileExists(atPath: sourceResources.appendingPathComponent(english).path) {
-            resources = sourceResources
-        } else if let bundled = Bundle.main.resourceURL,
-                  FileManager.default.fileExists(atPath: bundled.appendingPathComponent(english).path) {
+        let file = "\(language).lproj/Localizable.strings"
+        var resources = sourceResources
+        if !FileManager.default.fileExists(atPath: sourceResources.appendingPathComponent(file).path),
+           let bundled = Bundle.main.resourceURL,
+           FileManager.default.fileExists(atPath: bundled.appendingPathComponent(file).path) {
             resources = bundled
-        } else {
-            resources = sourceResources
         }
-        return (
-            try keys(in: resources.appendingPathComponent(english)),
-            try keys(in: resources.appendingPathComponent("zh-Hans.lproj/Localizable.strings"))
-        )
+        return try entries(in: resources.appendingPathComponent(file))
     }
 
-    /// Keys are the quoted token before `=`. Values are ignored; a malformed
-    /// line is skipped rather than failing the parse, so one bad entry shows up
-    /// as a missing key with a clear message.
-    private static func keys(in url: URL) throws -> [String] {
+    /// `"key" = "value";` lines. A malformed line is skipped rather than
+    /// failing the parse, so one bad entry shows up as a missing key with a
+    /// clear message.
+    private static func entries(in url: URL) throws -> [String: String] {
         let text = try String(contentsOf: url, encoding: .utf8)
-        return text.split(separator: "\n").compactMap { line -> String? in
+        var table: [String: String] = [:]
+        for line in text.split(separator: "\n") {
             let trimmed = line.trimmingCharacters(in: .whitespaces)
-            guard trimmed.hasPrefix("\""), let equals = trimmed.range(of: "\" =") else { return nil }
-            return String(trimmed[trimmed.startIndex..<equals.lowerBound].dropFirst())
+            guard trimmed.hasPrefix("\""), let equals = trimmed.range(of: "\" = \"") else { continue }
+            let key = String(trimmed[trimmed.index(after: trimmed.startIndex)..<equals.lowerBound])
+            var value = String(trimmed[equals.upperBound...])
+            if value.hasSuffix("\";") { value.removeLast(2) }
+            table[key] = value
         }
+        return table
+    }
+
+    /// The format specifiers in a string, in order: `%d`, `%@`, `%ld`. `%%` is
+    /// a literal percent sign, not a specifier.
+    static func specifiers(in format: String) -> [String] {
+        var result: [String] = []
+        var index = format.startIndex
+        while let percent = format[index...].firstIndex(of: "%") {
+            var cursor = format.index(after: percent)
+            guard cursor < format.endIndex else { break }
+            if format[cursor] == "%" { index = format.index(after: cursor); continue }
+            var spec = "%"
+            while cursor < format.endIndex, "lhqjzt0123456789.$".contains(format[cursor]) {
+                spec.append(format[cursor]); cursor = format.index(after: cursor)
+            }
+            if cursor < format.endIndex { spec.append(format[cursor]); cursor = format.index(after: cursor) }
+            result.append(spec)
+            index = cursor
+        }
+        return result
     }
 }
 

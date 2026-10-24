@@ -63,7 +63,7 @@ jobs:
           test -f "$APP/Contents/Resources/AppIcon.icns"
           # Both localizations must ship: a missing one silently falls back to
           # English for Chinese users.
-          for lang in en.lproj zh-Hans.lproj; do
+          for lang in en.lproj zh-Hans.lproj de.lproj; do
             test -d "$APP/Contents/Resources/$lang" || { echo "missing $lang"; exit 1; }
           done
           /usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Contents/Info.plist"
@@ -144,24 +144,29 @@ jobs:
         run: plutil -lint Support/Info.plist
 
       - name: Localizations have the same keys
-        # A key present in English but missing in Chinese silently shows the
-        # English sentence to a Chinese user.
+        # A key present in English but missing in a translation silently shows
+        # the English sentence to that language's users.
         run: |
           python3 - <<'PY'
           import re, sys, pathlib
+          root = pathlib.Path("Sources/PortScope/Resources")
           def keys(path):
-              text = pathlib.Path(path).read_text(encoding="utf-8")
+              text = path.read_text(encoding="utf-8")
               return set(re.findall(r'^"([^"]+)"\s*=', text, re.M))
-          en = keys("Sources/PortScope/Resources/en.lproj/Localizable.strings")
-          zh = keys("Sources/PortScope/Resources/zh-Hans.lproj/Localizable.strings")
-          missing = sorted(en - zh)
-          extra = sorted(zh - en)
-          for key in missing:
-              print(f"::error::zh-Hans is missing '{key}'")
-          for key in extra:
-              print(f"::warning::zh-Hans has '{key}' which English does not")
-          print(f"{len(en)} keys, {len(missing)} missing, {len(extra)} extra")
-          sys.exit(1 if missing else 0)
+          en = keys(root / "en.lproj/Localizable.strings")
+          failed = False
+          for table in sorted(root.glob("*.lproj/Localizable.strings")):
+              language = table.parent.name.removesuffix(".lproj")
+              if language == "en":
+                  continue
+              other = keys(table)
+              for key in sorted(en - other):
+                  print(f"::error::{language} is missing '{key}'")
+                  failed = True
+              for key in sorted(other - en):
+                  print(f"::warning::{language} has '{key}' which English does not")
+              print(f"{language}: {len(en)} keys, {len(en - other)} missing, {len(other - en)} extra")
+          sys.exit(1 if failed else 0)
           PY
 
       - name: No credentials committed

@@ -259,7 +259,7 @@ struct MenuBarPanel: View {
             Spacer()
             HStack(spacing: 4) {
                 StatusDot(color: store.isScanning ? Theme.warning : Theme.live, size: 5)
-                Text("\(store.totalCount)")
+                Text(verbatim: "\(store.totalCount)")
                     .font(Theme.monoMicro)
                     .foregroundStyle(Theme.textSecondary)
             }
@@ -360,7 +360,7 @@ struct MenuBarRow: View {
                 StatusDot(color: Theme.warning, size: 5)
             }
 
-            Text(":\(info.port)")
+            Text(verbatim: ":\(info.port)")
                 .font(.system(size: 10, weight: .medium, design: .monospaced))
                 .foregroundStyle(Theme.textSecondary)
 
