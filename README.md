@@ -34,7 +34,9 @@ cd portscope
 open dist/PortScope.app
 ```
 
-`./scripts/package.sh` produces the same zip the releases ship.
+`./scripts/package.sh` produces the same zip the releases ship: a universal
+binary (Apple silicon and Intel) with a checksum, whose signature is verified
+after extraction.
 
 ## Why
 

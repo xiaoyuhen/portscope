@@ -32,7 +32,8 @@ cd portscope
 open dist/PortScope.app
 ```
 
-`./scripts/package.sh` 生成与 release 相同的压缩包。
+`./scripts/package.sh` 生成与 release 相同的压缩包：通用二进制（Apple 芯片与
+Intel 均可运行），附校验和，并会在解压后验证签名。
 
 ## 为什么需要它
 
