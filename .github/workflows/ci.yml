@@ -15,11 +15,11 @@ concurrency:
 permissions:
   contents: read
 
-# Telemetry is off in CI builds unless the repository defines a receiver URL as
-# a variable (Settings → Variables). Leaving it unset is the safe default: a
-# build with no endpoint never sends anything.
+# CI builds never carry the telemetry receiver URL. Only the release workflow
+# bakes it in, so a CI artifact someone downloads and opens is not counted as a
+# user. An empty value also overrides one inherited from anywhere else.
 env:
-  PORTSCOPE_TELEMETRY_URL: ${{ vars.PORTSCOPE_TELEMETRY_URL }}
+  PORTSCOPE_TELEMETRY_URL: ""
 
 jobs:
   build-and-test:
