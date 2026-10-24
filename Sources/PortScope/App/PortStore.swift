@@ -313,7 +313,7 @@ final class PortStore: ObservableObject {
             } catch {
                 lastActionMessage = ActionMessage(
                     text: "action.restartFailed", isError: true, service: info,
-                    detail: "\(error)"
+                    detail: restartFailureReason(error)
                 )
             }
         }
@@ -335,6 +335,22 @@ final class PortStore: ObservableObject {
             }
         }
         return "action.stopFailed"
+    }
+
+    /// A sentence for the banner. The raw error read
+    /// `portDidNotComeBack(5173)`, which explains nothing to a person.
+    private func restartFailureReason(_ error: Error) -> String {
+        let locale = AppLocale.shared
+        guard let error = error as? ProcessController.RestartError else {
+            return error.localizedDescription
+        }
+        switch error {
+        case .unknownCommand: return locale.t("restartError.unknownCommand")
+        case .stopFailed: return locale.t("restartError.stopFailed")
+        case .directoryMissing(let path): return locale.t("restartError.directoryMissing", path)
+        case .spawnFailed(let reason): return locale.t("restartError.spawnFailed", reason)
+        case .portDidNotComeBack(let port): return locale.t("restartError.portDidNotComeBack", port)
+        }
     }
 
     private func dismissMessageLater() {
