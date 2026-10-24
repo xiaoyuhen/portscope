@@ -47,4 +47,14 @@ fi
 echo "    signature survives the zip round trip"
 
 echo "==> $ZIP ($(du -h "$ZIP" | cut -f1))"
-shasum -a 256 "$ZIP" | tee "$ZIP.sha256"
+
+# The checksum file must name the zip *relative to itself*, not by its absolute
+# path. `shasum` writes whatever path it was given, so the previous version put
+# the build machine's directory in the file, and `shasum -c` failed for anyone
+# who downloaded it. cd in, so the recorded name is just the filename.
+(cd "$OUT" && shasum -a 256 "$(basename "$ZIP")" > "$(basename "$ZIP").sha256")
+cat "$ZIP.sha256"
+
+# Prove the published form works the way a user will use it.
+(cd "$OUT" && shasum -a 256 -c "$(basename "$ZIP").sha256" >/dev/null) \
+    && echo "    checksum verifies from the download directory"
