@@ -40,13 +40,26 @@ for candidate in python3 python3.13 python3.12 python3.11 python3.10 python3.9; 
     if command -v "$candidate" >/dev/null 2>&1; then PYTHON="$candidate"; break; fi
 done
 
-# A `python3` on PATH is not the same as a working one: on macOS it is often a
-# stub that checks for Command Line Tools on first run, which can take longer
-# than the case's startup timeout. Preflight it once, so a machine without a
-# usable interpreter skips the case instead of failing it.
-if [[ -n "$PYTHON" ]] && ! "$PYTHON" -c 'import http.server' >/dev/null 2>&1; then
-    echo "  note: $PYTHON cannot import http.server; skipping the Python case"
-    PYTHON=""
+# A `python3` on PATH is not the same as a working one. On macOS it can be a
+# stub that provisions Command Line Tools on first run; on some CI images it
+# imports fine but cannot bind a socket. Importing is therefore not enough —
+# preflight with a real bind on a throwaway port, so a machine whose interpreter
+# cannot serve skips the case instead of failing it for a reason unrelated to
+# PortScope.
+if [[ -n "$PYTHON" ]]; then
+    preflight_port=34199
+    "$PYTHON" -m http.server "$preflight_port" --bind 127.0.0.1 >/dev/null 2>&1 &
+    preflight_pid=$!
+    ok=0
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+        if lsof -nP -iTCP:"$preflight_port" -sTCP:LISTEN >/dev/null 2>&1; then ok=1; break; fi
+        sleep 0.5
+    done
+    kill_tree "$preflight_pid"
+    if (( ! ok )); then
+        echo "  note: $PYTHON cannot serve HTTP here; skipping the Python case"
+        PYTHON=""
+    fi
 fi
 
 PASS=0

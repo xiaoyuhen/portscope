@@ -63,11 +63,21 @@ public actor PortScanner {
         return snapshot
     }
 
-    /// Probes ports concurrently, but in a bounded batch: a machine with 40
-    /// dev servers should not open 40 sockets at once.
+    /// Probes ports concurrently, in a bounded batch.
+    ///
+    /// The bound exists so a machine with 40 dev servers does not open 40
+    /// sockets at once, but it also sets the worst case: a batch takes as long
+    /// as its slowest port, and a port that accepts a connection and then says
+    /// nothing (Redis, Postgres, SSH) burns the whole timeout. With a
+    /// batch of 8 that put a cold scan near 4 s, which is far too slow for a
+    /// list that refreshes every couple of seconds.
+    ///
+    /// A batch of 16 with a 1 s timeout keeps the socket count modest and cuts
+    /// the cold path roughly in half. The timeout is still generous enough for
+    /// a local HTTP server, which answers in single-digit milliseconds.
     private func probeAll(_ ports: [Int]) async -> [Int: HTTPProbeResult] {
         var results: [Int: HTTPProbeResult] = [:]
-        let batchSize = 8
+        let batchSize = 16
         for start in stride(from: 0, to: ports.count, by: batchSize) {
             let batch = Array(ports[start..<min(start + batchSize, ports.count)])
             await withTaskGroup(of: (Int, HTTPProbeResult?).self) { group in

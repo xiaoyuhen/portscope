@@ -46,8 +46,10 @@ PortScope answers those questions at a glance, and shows its reasoning.
 ## What it does
 
 - **Every listening port, live.** Loopback, LAN and wildcard binds; IPv4 and
-  IPv6 sockets of one service collapsed into a single row. A full scan takes
-  about 100 ms and needs no elevated privileges.
+  IPv6 sockets of one service collapsed into a single row. Enumerating the
+  sockets and reading process metadata takes about 100 ms; a first pass that
+  also probes every candidate over HTTP takes about 2 s, and needs no elevated
+  privileges.
 - **Quiet by default.** Desktop apps and macOS services (WeChat, Discord,
   ControlCenter, `rapportd`) hold ports all day and are never what you open a
   monitor to look at. They fold into one row — "13 desktop and system ports" —
@@ -94,7 +96,7 @@ answers HTTP but matches nothing is reported as "HTTP API" at 35%, not as
 "unknown" — that something is serving HTTP is already useful.
 
 The probe is deliberately narrow: `127.0.0.1` only (never the LAN address, even
-for a service bound to `0.0.0.0`), 1.5 s timeout, fixed User-Agent, no proxy,
+for a service bound to `0.0.0.0`), 1 s timeout, fixed User-Agent, no proxy,
 and skipped entirely for ports that cannot speak HTTP.
 
 ## How ports are folded
