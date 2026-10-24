@@ -227,6 +227,7 @@ struct MenuBarPanel: View {
     let openWindow: () -> Void
     @EnvironmentObject private var locale: AppLocale
     @EnvironmentObject private var store: PortStore
+    @ObservedObject private var updater = Updater.shared
 
     var body: some View {
         // Fixed height on each band, with the list taking the remainder: a
@@ -298,6 +299,14 @@ struct MenuBarPanel: View {
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(Theme.accent)
+            if let release = updater.pending {
+                Button(locale.t("menubar.update", release.version)) {
+                    updater.presentWindow?()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(Theme.live)
+            }
             Spacer()
             Button(locale.t("menubar.quit")) { NSApp.terminate(nil) }
                 .buttonStyle(.plain)

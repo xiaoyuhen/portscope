@@ -49,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor let store = PortStore()
     private var menuBar: MenuBarController?
     private var mainWindow: MainWindowController?
+    private var updateWindow: UpdateWindowController?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
         _ = HeadlessMode.handleIfNeeded()
@@ -80,6 +81,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Never blocks launch, never fails loudly. See Telemetry.swift for the
         // exact payload and how to opt out.
         Telemetry.recordLaunch(version: Self.version)
+
+        // Update checks: shortly after launch, then daily. See Updater.swift.
+        let updates = UpdateWindowController(locale: AppLocale.shared)
+        updateWindow = updates
+        Updater.shared.presentWindow = { updates.show() }
+        Updater.shared.start()
     }
 
     static var version: String {

@@ -13,7 +13,7 @@ stays there.
 - **Restart logs.** Output goes to `~/Library/Logs/PortScope/`.
 - **Your shell environment.** It is never read: it routinely holds API keys.
 
-## The one thing that leaves: an anonymous launch count
+## What leaves: an anonymous launch count, and an update check
 
 Open-source macOS apps have no download counter, so "is anyone using this?" is
 otherwise unanswerable. PortScope sends one event, at most once per version per
@@ -79,6 +79,18 @@ No IP address is read or written. The `installs` map holds random per-install
 IDs and is used only to report distinct installs; it is not joined to anything
 identifying. The worker source is in `infra/telemetry/worker.js` — it is short
 enough to read in one sitting.
+
+## The update check
+
+Once at launch and once a day, PortScope asks GitHub for the latest release
+(`GET https://api.github.com/repos/xiaoyuhen/portscope/releases/latest`).
+The request carries `User-Agent: PortScope/<version>` and nothing else; GitHub
+sees your IP address, as it does for any download from it. Installing an update
+downloads the release zip and its checksum from the same release.
+
+Turn it off in Settings → *Check for updates automatically*, or with
+`defaults write io.github.xiaoyuhen.portscope PortScope.update.automatic -bool NO`.
+*Check now* still works when it is off.
 
 ## If you build from source
 

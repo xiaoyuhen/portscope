@@ -197,6 +197,13 @@
 "settings.loginApproval" = "等待你在「系统设置 → 通用 → 登录项」中允许。";
 "settings.loginOpenSettings" = "打开设置";
 "settings.loginFailed" = "macOS 未允许：%@";
+"settings.updatesTitle" = "自动检查更新";
+"settings.updatesSubtitle" = "每天一次，从 GitHub 检查。不经你同意不会安装任何东西。";
+"settings.updatesCheck" = "立即检查";
+"settings.updatesShow" = "查看更新";
+"settings.updatesChecking" = "正在检查…";
+"settings.updatesCurrent" = "PortScope %@ 已是最新版本。";
+"settings.updatesAvailable" = "PortScope %@ 已发布。";
 "settings.telemetryTitle" = "匿名启动统计";
 "settings.telemetrySubtitle" = "每天最多发送一次应用版本和一个随机安装 ID。绝不发送你的端口内容。";
 "settings.hiddenTitle" = "已隐藏的端口";
@@ -257,6 +264,22 @@
 "menubar.tooltip" = "%d 个端口正在监听";
 "menubar.openApp" = "打开 PortScope";
 "menubar.quit" = "退出 PortScope";
+"menubar.update" = "更新到 %@";
+"update.title" = "PortScope 有新版本";
+"update.versions" = "PortScope %@ 已发布，你当前是 %@。";
+"update.notes" = "更新内容";
+"update.noNotes" = "这个版本没有发布更新说明。";
+"update.skip" = "跳过这个版本";
+"update.later" = "稍后提醒";
+"update.install" = "安装并重新打开";
+"update.downloading" = "正在下载并校验…";
+"update.installing" = "正在安装，PortScope 稍后会重新打开。";
+"update.failed" = "更新未完成：%@";
+"update.error.feed" = "GitHub 没有返回可用的版本信息。";
+"update.error.download" = "下载来源不是 GitHub。";
+"update.error.checksum" = "下载的文件与发布的校验和不一致，已拒绝安装。";
+"update.error.bundle" = "下载的 app 不是该版本的有效 PortScope，已拒绝安装。";
+"update.error.location" = "当前这份 app 无法在原位置替换，已改为打开发布页面。把 PortScope 移到「应用程序」后，下次即可原地更新。";
 
 /* MARK: - 后台服务 */
 "ports.backgroundHidden" = "%d 个桌面与系统端口";

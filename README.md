@@ -76,6 +76,10 @@ PortScope answers those questions at a glance, and shows its reasoning.
 - **English and 简体中文**, switchable at runtime. English is the default for
   everyone, whatever the system language is; 简体中文 applies once it is chosen
   in Settings.
+- **Updates itself.** A daily check against GitHub Releases; when there is a new
+  version it shows what changed, and *Install and Relaunch* downloads it,
+  verifies the checksum and signature, and swaps it in place. Skip a version or
+  turn the check off in Settings.
 - **Open in browser** or copy `localhost:port` from any row.
 
 ## Command line
