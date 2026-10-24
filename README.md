@@ -73,9 +73,9 @@ PortScope answers those questions at a glance, and shows its reasoning.
 - **A menu bar count.** Closing the window leaves PortScope running in the menu
   bar with a live port count; the panel lists the same rows as the window.
   **Open at login** is one switch in Settings.
-- **English and 简体中文**, switchable at runtime. English is the default for
-  everyone, whatever the system language is; 简体中文 applies once it is chosen
-  in Settings.
+- **English, 简体中文 and Deutsch**, switchable at runtime. English is the
+  default for everyone, whatever the system language is; another language
+  applies once it is chosen in Settings.
 - **Updates itself.** A daily check against GitHub Releases; when there is a new
   version it shows what changed, and *Install and Relaunch* downloads it,
   verifies the checksum and signature, and swaps it in place. Skip a version or

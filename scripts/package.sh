@@ -21,7 +21,7 @@ test -x "$APP/Contents/MacOS/PortScope"
 /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$APP/Contents/Info.plist"
 # Both localizations must be present, or the language switch silently falls
 # back to English for Chinese users.
-for lang in en.lproj zh-Hans.lproj; do
+for lang in en.lproj zh-Hans.lproj de.lproj; do
     test -d "$APP/Contents/Resources/$lang" || { echo "missing $lang"; exit 1; }
 done
 

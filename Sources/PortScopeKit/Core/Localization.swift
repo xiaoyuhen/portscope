@@ -7,7 +7,7 @@ import Foundation
 /// runtime without relaunching.
 public enum LocalizationSupport {
     /// Languages PortScope ships, in fallback order.
-    public static let supportedLanguages = ["en", "zh-Hans"]
+    public static let supportedLanguages = ["en", "zh-Hans", "de"]
 
     /// The language the app starts in for everyone.
     ///
@@ -22,6 +22,7 @@ public enum LocalizationSupport {
     public static func displayName(for language: String) -> String {
         switch language {
         case "zh-Hans": return "简体中文"
+        case "de": return "Deutsch"
         default: return "English"
         }
     }

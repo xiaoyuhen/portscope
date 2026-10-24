@@ -1,0 +1,287 @@
+/* PortScope — Deutsch */
+
+"app.name" = "PortScope";
+"placeholder.subtitle" = "Behält deine localhost-Ports im Blick.";
+
+/* MARK: - Allgemein */
+"common.close" = "Schließen";
+"common.cancel" = "Abbrechen";
+"common.confirm" = "Bestätigen";
+"common.copy" = "Kopieren";
+"common.copied" = "Kopiert";
+"common.open" = "Öffnen";
+"common.refresh" = "Aktualisieren";
+"common.unknown" = "Unbekannt";
+"common.none" = "Keine";
+
+/* MARK: - Belege */
+"evidence.process" = "Prozess";
+"evidence.httpHeader" = "HTTP-Header";
+"evidence.httpStatus" = "HTTP-Antwort";
+"evidence.nonHTTP" = "Kein HTTP";
+"evidence.wellKnownPort" = "Bekannter Port";
+"evidence.container" = "Docker-Container";
+"evidence.process.detail" = "argv";
+"evidence.nonHTTP.detail" = "Der Port hat eine Verbindung angenommen, aber nicht per HTTP geantwortet.";
+
+/* MARK: - Dienstbeschreibungen */
+"service.unknown" = "PortScope konnte nicht erkennen, was das ist. Prozess und Befehlszeile stehen trotzdem unten.";
+"service.genericHTTP" = "Ein HTTP-Server, der sich nicht zu erkennen gibt. Öffne ihn, um zu sehen, was er ausliefert.";
+"service.genericAPI" = "Ein HTTP-Endpunkt, der JSON liefert. Wahrscheinlich eine API – die Antwort verrät, welche.";
+
+"service.vite" = "Vite-Dev-Server. Liefert dein Frontend während der Entwicklung mit Hot Reload aus.";
+"service.next" = "Next.js. Im Dev-Modus mit Hot Reload, in Produktion liefert es die gebaute App aus.";
+"service.nuxt" = "Nuxt-Dev-Server für eine Vue-Anwendung, mit Hot Reload.";
+"service.webpack" = "webpack-Dev-Server. Bündelt dein Frontend und liefert es mit Live Reload aus.";
+"service.nodemon" = "nodemon. Startet einen Node-Prozess neu, sobald sich seine Dateien ändern.";
+"service.cra" = "Create-React-App-Dev-Server. Liefert eine React-App mit Hot Reload aus.";
+"service.angular" = "Angular-CLI-Dev-Server, mit Live Reload.";
+"service.vuecli" = "Vue-CLI-Dev-Server, mit Hot Reload.";
+"service.remix" = "Remix-Dev-Server. Liefert Routen mit Hot Reload und serverseitigem Rendering aus.";
+"service.astro" = "Astro-Dev-Server. Liefert deine Website während der Entwicklung mit Hot Reload aus.";
+"service.sveltekit" = "SvelteKit-Dev-Server, mit Hot Reload.";
+"service.storybook" = "Storybook. Eine Browser-Oberfläche, um UI-Komponenten isoliert anzusehen und zu testen.";
+"service.staticServer" = "Ein Server für statische Dateien. Liefert die Dateien seines Arbeitsverzeichnisses per HTTP aus.";
+
+"service.django" = "Django-Entwicklungsserver. Liefert eine Python-Web-App aus – nur für die Entwicklung, nicht für Produktion.";
+"service.pythonServer" = "Ein Python-ASGI/WSGI-Server (Uvicorn oder Gunicorn), der eine Web-App ausführt.";
+"service.flask" = "Flask-Entwicklungsserver für eine Python-Web-App.";
+"service.pythonHTTPServer" = "Pythons eingebauter http.server. Liefert das aktuelle Verzeichnis als statische Dateien aus.";
+"service.jupyter" = "Jupyter. Eine Notebook-Umgebung im Browser, mit einem Kernel pro Notebook.";
+"service.streamlit" = "Streamlit. Macht aus Python-Skripten interaktive Daten-Apps.";
+"service.gradio" = "Gradio. Eine Web-Oberfläche für ein Machine-Learning-Modell oder eine Funktion.";
+
+"service.redis" = "Redis. Ein In-Memory-Key-Value-Store für Caching, Queues und Rate Limiting.";
+"service.valkey" = "Valkey, der Open-Source-Fork von Redis. Ein In-Memory-Key-Value-Store.";
+"service.memcached" = "Memcached. Ein In-Memory-Cache, meist vor einer Datenbank.";
+"service.postgres" = "PostgreSQL. Eine relationale Datenbank.";
+"service.mysql" = "MySQL. Eine relationale Datenbank.";
+"service.mongodb" = "MongoDB. Eine Dokumentendatenbank.";
+"service.clickhouse" = "ClickHouse. Eine spaltenorientierte Datenbank für Analysen.";
+"service.influxdb" = "InfluxDB. Eine Zeitreihendatenbank.";
+"service.elasticsearch" = "Elasticsearch. Eine Such- und Analyse-Engine.";
+"service.qdrant" = "Qdrant. Eine Vektordatenbank, meist für Embeddings und semantische Suche.";
+"service.ollama" = "Ollama. Führt lokale Sprachmodelle aus und stellt sie über eine HTTP-API bereit.";
+
+"service.rabbitmq" = "RabbitMQ. Ein Message Broker, der Arbeit zwischen Diensten in Warteschlangen verteilt.";
+"service.nats" = "NATS. Ein schlankes Messaging-System.";
+"service.mosquitto" = "Mosquitto. Ein MQTT-Broker für IoT-Geräte.";
+"service.minio" = "MinIO. S3-kompatibler Objektspeicher, lokal ausgeführt.";
+"service.consul" = "Consul. Service Discovery und Health Checks.";
+"service.vault" = "Vault. Verwaltung von Secrets.";
+
+"service.node" = "Ein Node.js-Prozess. Er lauscht, aber aus der Befehlszeile allein ließ sich das Framework nicht erkennen.";
+"service.bun" = "Ein Bun-Prozess. Eine JavaScript-Runtime mit Paketmanager.";
+"service.deno" = "Ein Deno-Prozess. Eine sichere JavaScript/TypeScript-Runtime.";
+"service.python" = "Ein Python-Prozess, der auf einem Port lauscht.";
+"service.ruby" = "Ein Ruby-Prozess, der auf einem Port lauscht.";
+"service.java" = "Ein Java-Prozess, der auf einem Port lauscht.";
+"service.go" = "Ein Go-Programm, das auf einem Port lauscht.";
+"service.php" = "Ein PHP-Prozess, der auf einem Port lauscht.";
+"service.nginx" = "nginx. Ein Webserver und Reverse Proxy.";
+"service.caddy" = "Caddy. Ein Webserver mit automatischem HTTPS.";
+"service.apache" = "Apache httpd. Ein Webserver.";
+"service.express" = "Express. Ein Node.js-Web-Framework – dies ist eine darauf gebaute API oder Web-App.";
+"service.uvicorn" = "Uvicorn. Ein ASGI-Server, meist mit FastAPI oder Starlette.";
+"service.gunicorn" = "Gunicorn. Ein Python-WSGI-Server, meist mit Flask oder Django.";
+"service.envoy" = "Envoy-Proxy. Meist die Data Plane eines Service Mesh oder ein lokales Gateway.";
+"service.s3" = "S3-kompatible Objektspeicher-API.";
+
+"service.docker" = "Docker. Eine Container-Runtime, die Ports deiner Container weiterleitet.";
+"service.dockerContainer" = "Ein Docker-Container, der diesen Port veröffentlicht. Stoppen und Neustarten betreffen den Container, nicht Docker.";
+"service.colima" = "Colima. Eine Container-Runtime für macOS, die Container-Ports weiterleitet.";
+"service.orbstack" = "OrbStack. Eine Container-Runtime für macOS, die Container-Ports weiterleitet.";
+
+"service.discord" = "Discord. Der lokale IPC-Endpunkt der Desktop-App – darüber spricht der Discord-Client mit sich selbst.";
+"service.wechat" = "WeChat. Ein lokaler Port, den die Desktop-App intern nutzt; kein Webdienst.";
+"service.slack" = "Slack. Der lokale Endpunkt der Desktop-App, intern genutzt.";
+"service.vscode" = "Visual Studio Code. Ein lokaler Endpunkt des Editors, oft für Erweiterungen oder den Debugger.";
+
+"service.airplay" = "AirPlay-Empfänger. Teil von macOS: Andere Apple-Geräte können Audio und Video an diesen Mac streamen.";
+"service.rapportd" = "Integration (Continuity). Teil von macOS: Handoff, gemeinsame Zwischenablage und Sidecar zwischen deinen Apple-Geräten.";
+"service.sharingd" = "macOS-Freigaben. Datei- und Bildschirmfreigabe.";
+"service.bonjour" = "Bonjour. Dienstsuche von macOS im lokalen Netzwerk.";
+"service.ssh" = "SSH. Entfernter Shell-Zugriff auf diesen Rechner.";
+"service.http" = "Der Standard-HTTP-Port.";
+"service.https" = "Der Standard-HTTPS-Port.";
+"service.port3000" = "Ein Dev-Server auf dem üblichen Node.js-Port. Das Framework ließ sich nicht erkennen.";
+"service.port8000" = "Ein Dev-Server auf dem üblichen Python-Port. Das Framework ließ sich nicht erkennen.";
+"service.port8080" = "Ein Webserver auf dem üblichen alternativen HTTP-Port.";
+"service.kafka" = "Apache Kafka. Eine verteilte Event-Streaming-Plattform.";
+
+/* MARK: - Leiste und Seiten */
+"topbar.live" = "Live";
+"topbar.scanning" = "Scannt";
+"topbar.refresh" = "Jetzt aktualisieren";
+"topbar.settings" = "Einstellungen";
+"page.ports" = "Ports";
+"page.overview" = "Übersicht";
+"page.settings" = "Einstellungen";
+
+/* MARK: - Erreichbarkeit */
+"exposure.loopback" = "Nur lokal";
+"exposure.interface" = "Auf einer Netzwerkschnittstelle";
+"exposure.allInterfaces" = "Auf allen Schnittstellen";
+"exposure.help" = "Von anderen Geräten in deinem Netzwerk erreichbar.";
+
+/* MARK: - Filter */
+"filter.all" = "Alle";
+"filter.development" = "Dev";
+"filter.databases" = "Daten";
+"filter.exposed" = "Offen";
+"filter.system" = "System";
+
+/* MARK: - Portliste */
+"ports.search" = "Ports durchsuchen …";
+"ports.empty" = "Gerade lauscht kein Port.";
+"ports.noMatches" = "Nichts passt zu dieser Suche.";
+"ports.clearSearch" = "Suche löschen";
+"ports.footer" = "%d von %d Ports";
+"ports.showHidden" = "%d ausgeblendete zeigen";
+"ports.updated" = "aktualisiert %@";
+"ports.new" = "NEU";
+"ports.openInBrowser" = "Im Browser öffnen";
+"ports.copyAddress" = "Adresse kopieren";
+"ports.hide" = "Diesen Port ausblenden";
+"ports.revealInFinder" = "Arbeitsverzeichnis zeigen";
+
+/* MARK: - Inspektor */
+"inspector.open" = "Öffnen";
+"inspector.whatItIs" = "Was das ist";
+"inspector.evidence" = "Woran PortScope das erkennt";
+"inspector.confidence" = "%d %% sicher";
+"inspector.noEvidence" = "Noch keine Belege gesammelt.";
+"inspector.process" = "Prozess";
+"inspector.pid" = "PID";
+"inspector.executable" = "Programm";
+"inspector.httpStatus" = "HTTP-Status";
+"inspector.server" = "Server-Header";
+"inspector.commandLine" = "Befehlszeile";
+"inspector.project" = "Projekt";
+"inspector.reveal" = "Zeigen";
+"inspector.uptime" = "läuft seit %@";
+
+/* MARK: - Dienstarten */
+"kind.web" = "Web";
+"kind.api" = "API";
+"kind.database" = "Datenbank";
+"kind.cache" = "Cache";
+"kind.devServer" = "Dev-Server";
+"kind.bundler" = "Bundler";
+"kind.container" = "Container";
+"kind.ai" = "KI";
+"kind.messaging" = "Messaging";
+"kind.system" = "System";
+"kind.other" = "Sonstiges";
+
+/* MARK: - Übersicht */
+"overview.listening" = "Lauschend";
+"overview.devServers" = "Dev-Server";
+"overview.dataStores" = "Datenspeicher";
+"overview.networkReachable" = "Im Netzwerk erreichbar";
+"overview.byKind" = "Nach Art";
+"overview.exposure" = "Erreichbarkeit";
+"overview.exposureHint" = "Ports, die an eine Netzwerkschnittstelle gebunden sind, nicht nur an Loopback.";
+"overview.nothingExposed" = "Nichts ist aus dem Netzwerk erreichbar.";
+"overview.andMore" = "+%d weitere";
+"overview.justAppeared" = "Gerade erschienen";
+
+/* MARK: - Einstellungen */
+"settings.refreshTitle" = "Aktualisierungsintervall";
+"settings.refreshSubtitle" = "Wie oft PortScope den Rechner neu scannt.";
+"settings.seconds" = "%d s";
+"settings.languageTitle" = "Sprache";
+"settings.languageSubtitle" = "Gilt sofort, ohne Neustart.";
+"settings.loginTitle" = "Bei Anmeldung öffnen";
+"settings.loginSubtitle" = "PortScope beim Anmelden in der Menüleiste starten.";
+"settings.loginApproval" = "Wartet auf deine Freigabe unter Systemeinstellungen → Allgemein → Anmeldeobjekte.";
+"settings.loginOpenSettings" = "Einstellungen öffnen";
+"settings.loginFailed" = "macOS hat es nicht erlaubt: %@";
+"settings.updatesTitle" = "Automatisch nach Updates suchen";
+"settings.updatesSubtitle" = "Einmal täglich, bei GitHub. Nichts wird ohne Nachfrage installiert.";
+"settings.updatesCheck" = "Jetzt prüfen";
+"settings.updatesShow" = "Update zeigen";
+"settings.updatesChecking" = "Wird geprüft …";
+"settings.updatesCurrent" = "PortScope %@ ist die neueste Version.";
+"settings.updatesAvailable" = "PortScope %@ ist verfügbar.";
+"settings.telemetryTitle" = "Anonyme Start-Zählung";
+"settings.telemetrySubtitle" = "Sendet einmal täglich die App-Version und eine zufällige Installations-ID. Nie, was auf deinen Ports lauscht.";
+"settings.hiddenTitle" = "Ausgeblendete Ports";
+"settings.hiddenSubtitle" = "Ports, die du aus der Liste ausgeblendet hast. Sie werden weiter überwacht.";
+"settings.unhideAll" = "Alle zeigen";
+"settings.about" = "Über";
+"settings.aboutBody" = "PortScope liest lauschende Sockets über libproc, dieselbe Kernel-Schnittstelle wie lsof, und erkennt Dienste anhand von Prozessdaten und HTTP-Headern. Abgesehen von der anonymen Start-Zählung verlässt nichts diesen Rechner.";
+
+/* MARK: - Aktivität */
+"overview.activity" = "Aktivität";
+"overview.events" = "%d Änderungen";
+"overview.noActivity" = "Seit dem Start von PortScope hat sich kein Port geöffnet oder geschlossen. Starte einen Dev-Server, dann erscheint er hier.";
+
+/* MARK: - Aktionen */
+"ports.stop" = "Stoppen";
+"ports.restart" = "Neu starten";
+"inspector.stop" = "Stoppen";
+"inspector.restart" = "Neu starten";
+"confirm.stopTitle" = "Diesen Dienst stoppen?";
+"confirm.stopSubtitle" = "Der Prozess und seine Kindprozesse werden beendet.";
+"confirm.restartTitle" = "Diesen Dienst neu starten?";
+"confirm.restartSubtitle" = "Der Prozess wird gestoppt und mit derselben Befehlszeile wieder gestartet.";
+"confirm.service" = "Dienst";
+"confirm.port" = "Port";
+"confirm.pid" = "PID";
+"confirm.uptime" = "Laufzeit";
+"confirm.command" = "Befehl";
+"confirm.stop" = "Stoppen";
+"confirm.restart" = "Neu starten";
+"confirm.noWorkingDirectory" = "Das Arbeitsverzeichnis dieses Prozesses ist nicht lesbar. Er wird aus deinem Benutzerordner neu gestartet.";
+"confirm.appWarning" = "Das ist ein Desktop- oder Systemprozess. Ihn zu stoppen, kann eine App schließen oder eine macOS-Funktion abschalten.";
+"confirm.containerStopTitle" = "Diesen Container stoppen?";
+"confirm.containerStopSubtitle" = "Docker stoppt nur diesen einen Container, wie docker stop. Andere Container laufen weiter.";
+"confirm.containerRestartTitle" = "Diesen Container neu starten?";
+"confirm.containerRestartSubtitle" = "Docker startet nur diesen einen Container neu, wie docker restart.";
+"confirm.container" = "Container";
+"confirm.image" = "Image";
+"action.stopped" = "%@ gestoppt.";
+"action.forceStopped" = "%@ gestoppt. Der Prozess hat sich nicht sauber beendet und wurde zwangsweise beendet.";
+"action.restarted" = "%@ neu gestartet.";
+"action.restartFailed" = "%@ konnte nicht neu gestartet werden.";
+"action.stopFailed" = "Der Prozess konnte nicht gestoppt werden.";
+"action.refusedOtherUser" = "Nicht gestoppt: Der Prozess gehört einem anderen Benutzer.";
+"action.refusedOwnProcess" = "Nicht gestoppt: PortScope sendet sich selbst keine Signale.";
+"action.refusedSystem" = "Nicht gestoppt: Das ist ein Systemprozess.";
+"action.processGone" = "Der Prozess war bereits beendet.";
+"action.containerStopped" = "Container %@ gestoppt.";
+"action.containerStopFailed" = "Docker hat %@ nicht gestoppt.";
+"action.containerRestarted" = "Container %@ neu gestartet.";
+"action.containerRestartFailed" = "Docker hat %@ nicht neu gestartet.";
+"restartError.unknownCommand" = "Der Befehl, mit dem er gestartet wurde, ließ sich nicht lesen.";
+"restartError.stopFailed" = "Die laufende Instanz ließ sich nicht stoppen, deshalb wurde keine zweite gestartet.";
+"restartError.directoryMissing" = "Sein Arbeitsverzeichnis existiert nicht mehr: %@";
+"restartError.spawnFailed" = "Er konnte nicht gestartet werden: %@";
+"restartError.portDidNotComeBack" = "Port %d war nach 20 Sekunden nicht wieder da. Die Ausgabe liegt in ~/Library/Logs/PortScope/.";
+
+/* MARK: - Menüleiste */
+"menubar.tooltip" = "%d Ports lauschen";
+"menubar.openApp" = "PortScope öffnen";
+"menubar.quit" = "PortScope beenden";
+"menubar.update" = "Auf %@ aktualisieren";
+"update.title" = "Eine neue Version von PortScope ist verfügbar";
+"update.versions" = "PortScope %@ ist verfügbar – du hast %@.";
+"update.notes" = "Neu in dieser Version";
+"update.noNotes" = "Zu dieser Version wurden keine Release Notes veröffentlicht.";
+"update.skip" = "Diese Version überspringen";
+"update.later" = "Später erinnern";
+"update.install" = "Installieren und neu starten";
+"update.downloading" = "Wird geladen und geprüft …";
+"update.installing" = "Wird installiert. PortScope öffnet sich gleich wieder.";
+"update.failed" = "Das Update wurde nicht abgeschlossen: %@";
+"update.error.feed" = "GitHub hat keine verwendbare Version geliefert.";
+"update.error.download" = "Der Download stammt nicht von GitHub.";
+"update.error.checksum" = "Der Download passt nicht zur veröffentlichten Prüfsumme und wurde deshalb nicht installiert.";
+"update.error.bundle" = "Die geladene App ist kein gültiges PortScope dieser Version und wurde deshalb nicht installiert.";
+"update.error.location" = "Diese Kopie lässt sich an ihrem Ort nicht ersetzen. Stattdessen wurde die Release-Seite geöffnet; verschiebe PortScope in den Ordner Programme, dann klappt das Update beim nächsten Mal direkt.";
+
+/* MARK: - Hintergrunddienste */
+"ports.backgroundHidden" = "%d Desktop- und Systemports";
+"ports.backgroundHint" = "zeigen";
+"ports.backgroundCollapse" = "Systemports einklappen";
