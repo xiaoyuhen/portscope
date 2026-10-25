@@ -1,6 +1,6 @@
 # PortScope
 
-[简体中文](README.zh-CN.md) · English
+English · [简体中文](README.zh-CN.md) · [Deutsch](README.de.md)
 
 A native macOS menu bar app that shows every port listening on your Mac,
 explains what each service actually is, and lets you stop or restart it —
@@ -10,12 +10,18 @@ without hunting through `lsof`, `ps` and five terminal tabs.
 
 ## Install
 
-Download the latest `PortScope-x.y.z.zip` from
+With [Homebrew](https://brew.sh):
+
+```bash
+brew install --cask xiaoyuhen/tap/portscope
+```
+
+Or download the latest `PortScope-x.y.z.zip` from
 [Releases](https://github.com/xiaoyuhen/portscope/releases), unzip, and drag
 `PortScope.app` to Applications.
 
 The build is **ad-hoc signed, not notarised**, so macOS blocks the first
-launch. Either clear the quarantine flag once:
+launch of a downloaded zip. (The Homebrew cask takes care of this.) Either clear the quarantine flag once:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/PortScope.app
@@ -65,6 +71,7 @@ PortScope answers those questions at a glance, and shows its reasoning.
   says so — "Node.js, 55%" rather than a confident guess.
 - **Docker containers by name.** A published port shows the container behind
   it — `acme-web-1`, image, Compose project — instead of `com.docker.backend`.
+  Containers running a database or cache image count as data stores.
   Stop and Restart act on that one container through the engine API, never on
   Docker itself. Works with Docker Desktop, OrbStack, Colima and Rancher
   Desktop; no CLI needed.

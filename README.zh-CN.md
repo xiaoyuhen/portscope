@@ -1,6 +1,6 @@
 # PortScope
 
-[English](README.md) · 简体中文
+[English](README.md) · 简体中文 · [Deutsch](README.de.md)
 
 一个原生 macOS 应用：列出本机所有正在监听的端口，说明每个服务究竟是做什么的，
 并且可以直接停止或重启它 —— 不用再在 `lsof`、`ps` 和五个终端标签页之间来回翻。
@@ -9,10 +9,16 @@
 
 ## 安装
 
-从 [Releases](https://github.com/xiaoyuhen/portscope/releases) 下载最新的
+使用 [Homebrew](https://brew.sh)：
+
+```bash
+brew install --cask xiaoyuhen/tap/portscope
+```
+
+或者从 [Releases](https://github.com/xiaoyuhen/portscope/releases) 下载最新的
 `PortScope-x.y.z.zip`，解压后把 `PortScope.app` 拖进「应用程序」。
 
-构建产物是**临时签名（ad-hoc）、未经过公证**的，macOS 会拦下第一次启动。可以执行一次：
+构建产物是**临时签名（ad-hoc）、未经过公证**的，macOS 会拦下下载的 zip 第一次启动（Homebrew 安装会自动处理）。可以执行一次：
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/PortScope.app
@@ -56,7 +62,7 @@ PortScope 一眼就能回答这些问题，并且会说明它凭什么这么判�
 - **说明它是什么**，而不只是哪个 PID —— 服务、框架、项目目录、HTTP 状态，以及
   每个结论的依据。不确定时会明说："Node.js，55%"，而不是给一个看似肯定的猜测。
 - **Docker 容器按名字显示。** 发布出来的端口会显示背后的容器——`acme-web-1`、镜像、
-  Compose 项目——而不是 `com.docker.backend`。停止和重启通过引擎 API 只作用于这一个
+  Compose 项目——而不是 `com.docker.backend`。运行数据库或缓存镜像的容器计入数据存储。停止和重启通过引擎 API 只作用于这一个
   容器，绝不碰 Docker 本身。支持 Docker Desktop、OrbStack、Colima 和 Rancher
   Desktop，不需要 CLI。
 - **停止与重启。** 操作前确认，连同子进程一起处理，结束后验证结果。具体能碰什么、
